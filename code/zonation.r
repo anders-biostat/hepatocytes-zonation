@@ -3,6 +3,7 @@ library(Matrix)
 meta <- read.table(
   "from_Ki/Ki experimental design.txt", sep = "\t",
   header = TRUE)
+saveRDS(meta, file.path("results", "rds", "meta.rds"))
 
 countDir <- "from_Ki/Raw data/"
 
@@ -27,3 +28,12 @@ shapeCounts <- function(x) {
 sparseCounts <- map(counts, shapeCounts)
 allcounts <- do.call(cbind, sparseCounts)
 saveRDS(allcounts, file.path("results", "rds", "allcouts.rds"))
+
+
+barcodes <- gsub("Batch", "", colnames(counts))
+cellanno <- data.frame(
+  barcode = barcodes,
+  ID = gsub("_Cell.+", "", barcodes),
+  stringsAsFactors = FALSE)
+cellanno <- cellanno %>% left_join(meta)
+saveRDS(cellanno, file.path("results", "rds", "cellanno.rds"))
