@@ -2,6 +2,38 @@ library(Matrix)
 library(purrr)
 library(dplyr)
 library(tidyr)
+source("code/func.r")
+
+## Here we reproduce Itykovitz 2017/2018 algo
+etaDensity <- function(eta, zone, gammaParams) {
+  shape <- gammaParams[zone, 1]
+  scale <- gammaParams[zone, 2]
+  dgamma(eta, shape = shape, scale = scale)
+}
+
+calcEta <- function(x) {
+  res <- x$portal / (x$portal + x$central)
+  normEta(res)
+}
+
+normEta <- function(x) {
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
+
+calcEtaLikelihoods <- function(eta) {
+  zones <- 1:8
+  do.call(cbind, map(zones, ~ etaDensity(eta, .x)))
+}
+
+getPriors <- function(n) {
+  cellnums <- 2 * seq(1, n)
+  cellnums / sum(cellnums)
+}
+
+calcPosteriors <- function(zoneLiks, priors) {
+  x <- t(t(zoneLiks) * priors)
+  x / rowSums(x)
+}
 
 {cat("reading...")
   rdsDir <- file.path("results", "rds")
@@ -9,57 +41,78 @@ library(tidyr)
   counts <- readRDS(countsFile)
   meta <- readRDS(file.path(rdsDir, "meta.rds"))
   cellanno <- readRDS(file.path(rdsDir, "cellanno.rds"))
+  ## we work only with hepatocytes
+  heps <- cellanno$Cell.type == "HEP" & cellanno$Genotype == "DoubleKO"
+  heps[is.na(heps)] <- FALSE
+  cellanno <- cellanno[heps,]
+  counts <- counts[, heps]
+  rownames(counts) <- tolower(rownames(counts))
+  totals <- colSums(counts)
+  fracs <- t(t(counts) / totals)
+
   cat("OK\n")
 }
 
-## we work only with hepatocytes
-heps <- Negate(is.na)(
-  cellanno$Cell.type == "HEP"
-  & cellanno$Genotype == "Wildtype")
-cellanno <- cellanno[heps,]
-counts <- counts[, heps]
-
-## 1) normalize by cell totals
-## 2) posterior probability of zones P cells x zones
-## 3) column-normalize P (????) -> W
-## 4) multiply expression x W
 
 ## get parameters from Itzkovitz data
-rownames(counts) <- tolower(rownames(counts))
-totals <- colSums(counts)
-fracs <- t(t(counts) / totals)
-
-source("code/func.r")
 gammaParams <- getItzkevitzParams()$Gamma_params
 markers <- getMarkers()
+## genes we do not have:
+setdiff(unlist(markers), rownames(fracs))
+## [1] "cml2" "cyb5" "c1s"  "dak"
 ## use only genes we have
 markers <- lapply(markers, function(a) intersect(a, tolower(rownames(counts))))
+## Itzkovitz use fracs in matlab file, not doc'ed in publ.
+mexpr <- map(markers, ~ fracs[.x,])
 
-etaDensity <- function(eta, zone) {
-  shape <- gammaParams[zone, 1]
-  scale <- gammaParams[zone, 2]
-  dgamma(eta, shape = shape, scale = scale)
-}
+## 2018 publ.
+## 1) normalize by gene frac max across heps
+normByMax <- function(x)
+  x / apply(x, 1, max)
+nmexpr <- map(mexpr, normByMax)
+## 2) compute eta score
+eta <- calcEta(map(nmexpr, colSums))
+## 2) posterior probability of zones P cells x zones
+zoneLiks <- calcEtaLikelihoods(eta)
+priors <- getPriors(8)
+priors <- rep(1/8, 8)
+posteriors <- calcPosteriors(zoneLiks, priors)
+## 3) column-normalize P  -> W
+weights <- posteriors / colSums(posteriors, na.rm=TRUE)
+weights[is.na(weights)] <- 0
+## 4) multiply expression x W
+exprByZone <-  fracs %*% weights
 
-calcEta <- function(x) {
-  mexpr <- map(markers, ~ colSums(x[.x,]))
-  mexpr$portal / (mexpr$portal + mexpr$central)
-}
+x <- exprByZone / apply(exprByZone, 1, max)
 
-normEta <- function(x)
-  (x - min(x)) / (max(x) - min(x))
+genes_interest_hep <- c("Glul","Cyp2e1","Lgr5","Slc22a3","Slc13a3","Slc1a2",
+  "Slc1a2","Cib2", "Npr2","Cyp2c37","Lhpp","Cyp2a5","Slc1a4","Cyp2c38",
+  "Pcp4l1", "Arg1","Mup3","Pck1","Ass1","C2","Cyp2f2","G6pc","Uox","Igf1",
+  "Pigr", "Acly","Gls2","Mfsd2a","Celsr1","Bdh2")
+test <- c("Gpc1","Gas2","Sdsl","Ugt2b38","Hsd17b6","Cryl1","Serpina12","Mmd2",
+  "Clec2h","Setd7","Aldh1b1")
 
-calcEtaLikelihoods <- function(eta) {
-  zones <- 1:8
-  do.call(cbind, map(zones, ~ etaDensity(eta, .x)))
-}
+pheatmap(
+  x[tolower(genes_interest_hep),],
+  cluster_rows =  F,
+  cluster_cols = F,
+  show_colnames = F,
+  ## scale = "row",
+  color = rev(viridis::viridis(300)))
 
-getPdfs <- function(eta, numZones) {
-  pdfMat <- matrix(rep(0, numZones * length(eta)), ncol = numZones, nrow = length(eta))
-  for (i in 1:numZones){
-    pdf <- dgamma(eta, shape = gammaParams[i,1], scale = gammaParams[i,2])
-    pdf[pdf == 0] <- min(pdf[pdf > 0])
-    pdfMat[,i] <- pdf
-  }
-  pdfMat
-}
+pheatmap(x[unlist(markers),],
+  cluster_rows =  F,
+  cluster_cols = F,
+  show_colnames = F,
+  scale = "row",
+  color = (viridis::viridis(300)))
+
+x <- as.data.frame(as.matrix(t(counts[unlist(markers),])))
+x <- x %>% tibble::rownames_to_column("cell") %>%
+  gather(gene, count, -cell) %>%
+  inner_join(data.frame(cell = colnames(fracs), eta = eta))
+levels(x$gene) <-  unique(unlist(markers))
+
+  ggplot(data = x) +
+  geom_point(aes(x = eta, y = count)) +
+  facet_wrap(~gene, scales = "free_y",)
