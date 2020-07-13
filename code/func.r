@@ -35,7 +35,10 @@ etaDensity <- function(eta, zone, gammaParams) {
   dgamma(eta, shape = shape, scale = scale)
 }
 
-calcEta <- function(x) {
+calcEta <- function(x, markers) {
+  x <- map(markers, ~ x[.x, ])
+  x <- map(x, normByMax)
+  x <- map(x, colSums)
   res <- x$portal / (x$portal + x$central)
 }
 
@@ -63,12 +66,13 @@ calcPosteriors <- function(zoneLiks, priors) {
   x / rowSums(x)
 }
 
+normByMax <- function(x)
+  x / apply(x, 1, max)
+
 ## 2018 publ. for reference
 ## Itzkovitz use fracs in matlab file, not doc'ed in publ.
 shalevZoneAssign <- function(mexpr, markers, fracs) {
   ## 1) normalize by gene frac max across heps
-  normByMax <- function(x)
-    x / apply(x, 1, max)
   nmexpr <- map(mexpr, normByMax)
   ## 2) compute eta score
   eta <- calcEta(map(nmexpr, colSums))
@@ -85,3 +89,20 @@ shalevZoneAssign <- function(mexpr, markers, fracs) {
 }
 
 sparse2df <- function(x) as.data.frame(as.matrix(x))
+
+makeEtaDF <- function(idx, cellanno, counts, fracs, markers, etamethod = calcEta) {
+  cellanno <- cellanno[idx, ]
+  counts <- counts[, idx]
+  fracs <- fracs[, idx]
+  totals <- totals[idx]
+
+  ## just ratio of portal/(central + portal)
+  eta <- etamethod(fracs, markers)
+  d <- do.call(rbind, map(markers, ~ fracs[.x,]))
+  d <- sparse2df(t(d))
+  d$eta <- eta
+  d$total <- totals
+  d <- d %>% gather(gene, frac, -eta, -total)
+  d$gene <- factor(d$gene, levels = unlist(markers))
+  d
+}
