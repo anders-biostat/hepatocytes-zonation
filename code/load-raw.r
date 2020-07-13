@@ -1,5 +1,5 @@
 ## This file reads raw counts into a single table and creates meta table for cells.
-## There were  seurat objects provided with clustering information,
+## There were  seurat objects provided with clustering information for some samples,
 ## no source code for that, but it looks like some cells were filtered out,
 ## cell identities can not be mapped back to batches in obvious way, only guessing
 ## from gene expression, cell number and condition.
@@ -45,6 +45,7 @@ cellanno <- data.frame(
   barcode = barcodes,
   ID = gsub("_Cell.+", "", barcodes),
   stringsAsFactors = FALSE)
+cellanno$ID <- sub(".+_", "", cellanno$ID)
 cellanno <- cellanno %>% left_join(meta)
 saveRDS(cellanno, file.path("results", "rds", "cellanno.rds"))
 
