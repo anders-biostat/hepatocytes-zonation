@@ -5,6 +5,8 @@
 ## from gene expression, cell number and condition.
 library(purrr)
 library(Matrix)
+library(dplyr)
+library(tidyr)
 meta <- read.table(
   "from_Ki/Ki experimental design.txt", sep = "\t",
   header = TRUE)
