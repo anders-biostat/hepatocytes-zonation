@@ -8,6 +8,11 @@ getItzkevitzParams <- function() {
 }
 
 
+add6LandMarks <- function(x) {
+  x$central <- c(x$central, "glul", "cyp2e1")
+  x$portal <- c(x$portal, "ass1", "asl", "alb", "cyp2f2")
+  lapply(x, unique)
+}
 
 getItzkeitzMarkers <- function() {
   zonationParams <- getItzkevitzParams()
