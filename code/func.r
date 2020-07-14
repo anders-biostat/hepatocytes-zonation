@@ -104,15 +104,15 @@ makeEtaDF <- function(idx, cellanno, totals, fracs, markers, othergenes=NULL,
   cellanno <- cellanno[idx, ]
   fracs <- fracs[, idx]
   totals <- totals[idx]
-
   ## just ratio of portal/(central + portal)
   eta <- etamethod(fracs, markers)
-  d <- do.call(rbind, map(c(markers, othergenes), ~ fracs[.x,]))
+  allgenes <- unique(unlist(c(markers, othergenes)))
+  d <- fracs[allgenes, ]
   d <- sparse2df(t(d))
   d$eta <- eta
   d$total <- totals
   d$cell <- colnames(fracs)
   d <- d %>% gather(gene, frac, -eta, -total, -cell)
-  d$gene <- factor(d$gene, levels = unlist(markers))
+  d$gene <- factor(d$gene, levels = unlist(allgenes))
   d
 }
