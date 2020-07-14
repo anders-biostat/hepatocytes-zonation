@@ -36,6 +36,7 @@ sets <- list(
   "LSEC-DKO" = cellanno$Cell.type == "LSEC" & cellanno$Genotype == "DoubleKO"
 )
 
+## plot marker expression vs eta
 for(i in names(sets)[1:2]) {
   d <- makeEtaDF(sets[[i]], cellanno, counts, fracs, markers$itzkevitz)
   ## plot expression along eta and smoothing
@@ -68,7 +69,9 @@ for(i in names(sets)[1:2]) {
 averageGenesOverZones <- function(d, zoneNum) {
   x <- d %>%
     mutate(etaq = rank(eta)/length(eta), zone = cut(etaq, 0:zoneNum/zoneNum))
-  x <- x %>% group_by(gene, zone) %>%
+  x <- x %>%
+    select(gene, zone, frac) %>%
+    group_by(gene, zone) %>%
     summarise(frac = mean(frac)) %>%
     ungroup()
   x <- x %>% pivot_wider(names_from = gene, values_from = frac)
@@ -78,30 +81,65 @@ averageGenesOverZones <- function(d, zoneNum) {
   t(m)
 }
 
-
+## plot heatmaps for average expression at quantiles of eta
 for(i in names(sets)[1:2]) {
-d <- makeEtaDF(sets[[i]], cellanno, counts, fracs, markers$itzkevitz)
-m <- averageGenesOverZones(d, zoneNum = 6)
+  d <- makeEtaDF(sets[[i]], cellanno, counts, fracs, markers$itzkevitz)
+  m <- averageGenesOverZones(d, zoneNum = 6)
 
-pheatmap(
-  m,
-  scale = "row",
-  cluster_cols = FALSE,
-  cluster_rows = TRUE)
+  pheatmap(
+    m,
+    scale = "row",
+    cluster_cols = FALSE,
+    cluster_rows = TRUE)
 
-fn <- figpath(sprintf("marker-heatmap-zones-%s.png", i))
+  fn <- figpath(sprintf("marker-heatmap-zones-%s.png", i))
 
-geneType <- data.frame(
-  marker = c("central", "portal")[1 + rownames(m) %in% markers$itzkevitz$central])
-rownames(geneType) <- rownames(m)
+  geneType <- data.frame(
+    marker = c("central", "portal")[1 + rownames(m) %in% markers$itzkevitz$central])
+  rownames(geneType) <- rownames(m)
 
-pheatmap(
-  filename = fn,
-  annotation_row = geneType,
-  m,
-  scale = "row",
-  cluster_cols = FALSE,
-  cluster_rows = TRUE,
-  width = 10, height = 8, res = 200)
+  pheatmap(
+    filename = fn,
+    annotation_row = geneType,
+    m,
+    scale = "row",
+    cluster_cols = FALSE,
+    cluster_rows = TRUE,
+    width = 10, height = 8, res = 200)
+
+  x <- d %>% pivot_wider(names_from = gene, values_from = frac)
+  x <- x[,-(1:3)]
+  x <- as.matrix(x)
+  x <- cor(x)
+
+  pheatmap(x,
+    filename = figpath(sprintf("marker-corr-%s.png", i)),
+    breaks = seq(-.2,.2, length.out = 100),
+    cluster_cols = FALSE,
+    cluster_rows = FALSE)
 
 }
+
+
+plotCompareExpressionOverEta <- function() {
+
+  ds <- lapply(names(sets)[1:2], function(i)
+    d <- makeEtaDF(sets[[i]], cellanno, counts, fracs, markers$itzkevitz))
+  names(ds) <- names(sets)[1:2]
+
+  x <- bind_rows(ds, .id = "condition")
+  q <- qplot(
+    data = x,
+    x = eta,
+    colour =  condition,
+    y = frac,
+    alpha = .5,
+    size = I(.2)) +
+    guides(colour = guide_legend(override.aes = list(size = 2))) +
+    facet_wrap(~gene, scales = "free_y")
+  q
+}
+
+q <- plotCompareExpressionOverEta()
+ggsave(filename = figpath("compare-hep-marker-vs-eta.png"),
+  plot = q, width = 12, height = 10, dpi = 200)
