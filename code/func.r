@@ -20,7 +20,11 @@ getItzkeitzMarkers <- function() {
 }
 
 getLSECMarkers <- function() {
-
+  x <- list(
+    portal = read.table("from_Ki/Gene_of_interest_Ki_zonated_periportal")$V2,
+    central = read.table("from_Ki/Gene_of_interest_Ki_zonated_pericentral")$V2
+    )
+  lapply(x, as.character)
 }
 
 getZoneMarkers <- function() {
