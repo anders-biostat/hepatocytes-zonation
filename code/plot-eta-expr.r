@@ -4,21 +4,18 @@ library(dplyr)
 library(tidyr)
 library(pheatmap)
 source("code/func.r")
+source("code/assets.r")
 figdir <- file.path("results", "figs")
 figpath <- function(x) file.path(figdir, x)
 
 
 {cat("reading...")
-  rdsDir <- file.path("results", "rds")
-  countsFile <- file.path(rdsDir, "allcouts.rds")
-  counts <- readRDS(countsFile)
-  meta <- readRDS(file.path(rdsDir, "meta.rds"))
-  cellanno <- readRDS(file.path(rdsDir, "cellanno.rds"))
-  rownames(counts) <- tolower(rownames(counts))
+  counts <- loadFiles("counts")
+  meta <- loadFiles("meta")
+  cellanno <- loadFiles("cellanno")
   totals <- colSums(counts)
   fracs <- t(t(counts) / totals)
-
-  markers <- getZoneMarkers()
+  markers <- loadFiles("markers")
   cat("OK\n")
 }
 

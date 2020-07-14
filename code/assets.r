@@ -1,6 +1,14 @@
 
 rdsDir <- file.path("results", "rds")
 
+
+getCounts <- function() {
+  countsFile <- file.path(rdsDir, "allcouts.rds")
+  counts <- readRDS(countsFile)
+  rownames(counts) <- tolower(rownames(counts))
+  counts
+}
+
 loads <- list(
   counts = getCounts,
   meta = function() readRDS(file.path(rdsDir, "meta.rds")),
@@ -10,12 +18,7 @@ loads <- list(
 
 loadFiles <- function(...) {
   l <- list(...)
-  lapply(l, function(x) loads[[x]]())
-}
-
-getCounts <- function() {
-  countsFile <- function() function() file.path(rdsDir, "allcouts.rds")
-  counts <- function() function() readRDS(countsFile)
-  rownames(counts) <- function() function() tolower(rownames(counts))
-  counts
+  x <- lapply(l, function(x) loads[[x]]())
+  names(x) <- l
+  x
 }
