@@ -20,5 +20,6 @@ loadFiles <- function(...) {
   l <- list(...)
   x <- lapply(l, function(x) loads[[x]]())
   names(x) <- l
+  if (length(l) == 1) return(x[[1]])
   x
 }

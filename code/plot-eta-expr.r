@@ -25,6 +25,7 @@ setdiff(unlist(markers$itzkevitz), rownames(counts))
 ## use only genes we have
 markers$itzkevitz <- lapply(markers$itzkevitz, function(a) intersect(a, rownames(counts)))
 
+
 ## select condition
 sets <- list(
   "HEP-WT"  = cellanno$Cell.type == "HEP"  & cellanno$Genotype != "DoubleKO",
@@ -35,7 +36,7 @@ sets <- list(
 
 ## plot marker expression vs eta
 for(i in names(sets)[1:2]) {
-  d <- makeEtaDF(sets[[i]], cellanno, counts, fracs, markers$itzkevitz)
+  d <- makeEtaDF(sets[[i]], cellanno, totals, fracs, markers$itzkevitz)
   ## plot expression along eta and smoothing
   q <- d %>%
     ggplot(data= .) +
@@ -80,7 +81,7 @@ averageGenesOverZones <- function(d, zoneNum) {
 
 ## plot heatmaps for average expression at quantiles of eta
 for(i in names(sets)[1:2]) {
-  d <- makeEtaDF(sets[[i]], cellanno, counts, fracs, markers$itzkevitz)
+  d <- makeEtaDF(sets[[i]], cellanno, totals, fracs, markers$itzkevitz)
   m <- averageGenesOverZones(d, zoneNum = 6)
 
   pheatmap(
@@ -121,7 +122,7 @@ for(i in names(sets)[1:2]) {
 plotCompareExpressionOverEta <- function() {
 
   ds <- lapply(names(sets)[1:2], function(i)
-    d <- makeEtaDF(sets[[i]], cellanno, counts, fracs, markers$itzkevitz))
+    d <- makeEtaDF(sets[[i]], cellanno, totals, fracs, markers$itzkevitz))
   names(ds) <- names(sets)[1:2]
 
   x <- bind_rows(ds, .id = "condition")

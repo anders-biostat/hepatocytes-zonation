@@ -94,19 +94,19 @@ shalevZoneAssign <- function(mexpr, markers, fracs) {
 
 sparse2df <- function(x) as.data.frame(as.matrix(x))
 
-makeEtaDF <- function(idx, cellanno, counts, fracs, markers, etamethod = calcEta) {
+makeEtaDF <- function(idx, cellanno, totals, fracs, markers, othergenes=NULL,
+                      etamethod = calcEta) {
   cellanno <- cellanno[idx, ]
-  counts <- counts[, idx]
   fracs <- fracs[, idx]
   totals <- totals[idx]
 
   ## just ratio of portal/(central + portal)
   eta <- etamethod(fracs, markers)
-  d <- do.call(rbind, map(markers, ~ fracs[.x,]))
+  d <- do.call(rbind, map(c(markers, othergenes), ~ fracs[.x,]))
   d <- sparse2df(t(d))
   d$eta <- eta
   d$total <- totals
-  d$cell <- colnames(counts)
+  d$cell <- colnames(fracs)
   d <- d %>% gather(gene, frac, -eta, -total, -cell)
   d$gene <- factor(d$gene, levels = unlist(markers))
   d
