@@ -93,7 +93,7 @@ for(i in names(sets)[1:2]) {
   fn <- figpath(sprintf("marker-heatmap-zones-%s.png", i))
 
   geneType <- data.frame(
-    marker = c("central", "portal")[1 + rownames(m) %in% markers$itzkevitz$central])
+    marker = c("portal", "central")[1 + rownames(m) %in% markers$itzkevitz$central])
   rownames(geneType) <- rownames(m)
 
   pheatmap(
