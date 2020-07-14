@@ -41,16 +41,27 @@ q <- d %>%
 ggsave(figpath("landmarks-6-in-HEPs-WT-vs-eta.png"),
   q, width = 8, height= 6, dpi = 200)
 
-d <- makeEtaDF(
+dko <- makeEtaDF(
   cellanno$condition == "HEP|DoubleKO",
   cellanno, totals, fracs, markers$itzkevitz,
   othergenes = list(unlist(landmarks)))
 
-q <- d %>%
+q <- dko %>%
   filter(gene %in% unlist(landmarks)) %>%
   ggplot(data = .) +
   geom_point(aes(x = eta, y = frac), size = .2) +
   facet_wrap(~gene, scales = "free_y")
 
 ggsave(figpath("landmarks-6-in-HEPs-DoubleKO-vs-eta.png"),
+  q, width = 8, height= 6, dpi = 200)
+
+x <- bind_rows(
+  list(wt = d, ko = dko), .id = "condition"
+)
+
+q <- ggplot(data = x %>% filter(gene %in% unlist(landmarks))) +
+ geom_density(aes(x = log10(frac), colour = condition)) +
+  facet_wrap(~gene, scales = "free_y")
+
+ggsave(figpath("landmarks-6-in-HEPs-DoubleKO-vs-WT.png"),
   q, width = 8, height= 6, dpi = 200)
