@@ -1,6 +1,7 @@
 library(ggplot2)
 library(dplyr)
 library(tidyr)
+library(Matrix)
 
 source("code/assets.r")
 source("code/func.r")
@@ -33,11 +34,15 @@ m <- model.matrix(~ sample + 0,
   data = data.frame(
       sample = paste(cellanno$condition, cellanno$mouse, cellanno$batch)))
 
-## Sum up pseudobulks and plot hclust for moderate expression
+## Sum up pseudobulks/normalize by total and plot hclust for moderate expression
 pbulks <- counts %*% m
 colnames(pbulks) <- gsub("sample", "", colnames(pbulks))
 normedBulks <- t(pbulks) /colSums(pbulks)
 expressed <- rowMeans(pbulks) > 10
+
+x <- cor(as.matrix(t(normedBulks[, expressed])))
+pheatmap::pheatmap(x, filename = file.path("results", "figs", "qc-correlation-all.png"),
+  width = 9, height = 9)
 
 png(figpath("qc-dendrogram-bulks.png"), res = 200, width = 7, height = 7, units = "in")
 par(mar = c(0,0,0,10))
