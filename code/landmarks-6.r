@@ -22,7 +22,6 @@ figpath <- function(x) file.path(figdir, x)
 }
 
 landmarks <- add6LandMarks(list())
-cellanno$condition <- with(cellanno, paste(Cell.type, Genotype, sep = "|"))
 
 ## all are present!
 intersect(unlist(landmarks), rownames(counts))

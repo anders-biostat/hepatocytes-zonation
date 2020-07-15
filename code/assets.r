@@ -9,10 +9,16 @@ getCounts <- function() {
   counts
 }
 
+getCellAnno <- function() {
+  cellanno <- readRDS(file.path(rdsDir, "cellanno.rds"))
+  cellanno$condition <- with(cellanno, paste(Cell.type, Genotype, sep = "|"))
+  cellanno
+}
+
 loads <- list(
   counts = getCounts,
   meta = function() readRDS(file.path(rdsDir, "meta.rds")),
-  cellanno = function() readRDS(file.path(rdsDir, "cellanno.rds")),
+  cellanno = getCellAnno,
   markers = function() getZoneMarkers()
 )
 
