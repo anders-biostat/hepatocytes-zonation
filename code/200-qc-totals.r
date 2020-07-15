@@ -44,3 +44,17 @@ par(mar = c(0,0,0,10))
 plot(as.dendrogram(
   hclust(dist(normedBulks[, expressed]))), horiz = TRUE)
 dev.off()
+
+cols <- gsub(".+\\|", "", rownames(normedBulks))
+cols <- gsub(" .+", "", cols)
+pca <- prcomp(normedBulks[, expressed])
+qpca <- qplot(x = pca$x[,1],
+  y = pca$x[,2],
+  label = rownames(normedBulks),
+  geom = "text",
+  colour = cols,
+  size = I(1.2)) +
+  coord_cartesian(xlim = c(-.2,.4)) +
+  xlab("pc1") + ylab("pc2")
+ggsave(filename = figpath("pca-pbulks.png"),
+  qpca, dpi = 200, width = 5, height = 5)
