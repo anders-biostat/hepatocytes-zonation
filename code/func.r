@@ -50,7 +50,7 @@ getZoneMarkers <- function() {
     lsec = getLSECMarkers())
 }
 
-## Here we reproduce Itykovitz 2017/2018 algo
+## Here we reproduce Itzkovitz 2017/2018 algo
 etaDensity <- function(eta, zone, gammaParams) {
   shape <- gammaParams[zone, 1]
   scale <- gammaParams[zone, 2]

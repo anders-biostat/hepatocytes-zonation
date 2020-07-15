@@ -20,18 +20,6 @@ figpath <- function(x) file.path(figdir, x)
   cat("OK\n")
 }
 
-transformGeneAltNames <- function(markers) {
-  ## [1] "cml2" "cyb5" "c1s"  "dak"
-  ## use only genes we have
-  ## Ki found alternative names
-  i <- tolower(c("Nat8f2", "Cyb5a", "C1s1", "Tkfc"))
-  names(i) <- c("cml2","cyb5","c1s", "dak")
-  subGene <- function(g)
-    ifelse(g %in% names(i), i[g], g)
-  purrr::map(markers, ~ map_chr(.x, subGene))
-}
-
-markers$itzkevitz <- transformGeneAltNames(markers$itzkevitz)
 setdiff(unlist(markers$itzkevitz), rownames(counts))
 ## character(0)
 
