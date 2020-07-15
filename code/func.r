@@ -21,7 +21,20 @@ getItzkeitzMarkers <- function() {
     portal = zonationParams$genes_pn)
   markers <- lapply(markers, unlist)
   markers <- lapply(markers, tolower)
+  markers <- lapply(markers, transformGeneAltNames)
   markers
+}
+
+## substitute values given by Ki, return vector, input vector
+transformGeneAltNames <- function(markers) {
+  ## [1] "cml2" "cyb5" "c1s"  "dak"
+  ## use only genes we have
+  ## Ki found alternative names
+  i <- tolower(c("Nat8f2", "Cyb5a", "C1s1", "Tkfc"))
+  names(i) <- c("cml2","cyb5","c1s", "dak")
+  subGene <- function(g)
+    ifelse(g %in% names(i), i[g], g)
+  purrr::map_chr(markers, subGene)
 }
 
 getLSECMarkers <- function() {
