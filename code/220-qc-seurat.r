@@ -77,3 +77,7 @@ marks <- c(
 )
 q <- FeaturePlot(seu, marks)
 ggsave(figpattern("umap-markers.png"), q, width = 12, height = 12, dpi = 100)
+
+q <- UMAPPlot(seu, group.by = "Mouse.ID", split.by = "Cell.type")
+ggsave(figpattern("umap-all-by-celltype.png"), q, width = 10, height = 5, dpi = 200)
+
