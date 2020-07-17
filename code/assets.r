@@ -1,5 +1,11 @@
 
 rdsDir <- file.path("results", "rds")
+figdir <- file.path("results", "figs")
+
+figpattern <- function(pattern, ...) {
+  x <- glue::glue(pattern, ...)
+  file.path(figdir, x)
+}
 
 
 getCounts <- function() {
