@@ -81,3 +81,15 @@ ggsave(figpattern("umap-markers.png"), q, width = 12, height = 12, dpi = 100)
 q <- UMAPPlot(seu, group.by = "Mouse.ID", split.by = "Cell.type")
 ggsave(figpattern("umap-all-by-celltype.png"), q, width = 10, height = 5, dpi = 200)
 
+## plot how samples contribute to clusters and how sampels are spread among clusters
+with(seu@meta.data,
+  table(seurat_clusters, sample) %>% prop.table(2) %>%
+    pheatmap(filename = figpattern("all-prop-of-clusters-in-samples.png"),
+      width = 8, height = 8, units = "in"))
+dev.off()
+
+with(seu@meta.data,
+  table(seurat_clusters, sample) %>% prop.table(1) %>%
+    pheatmap(filename = figpattern("all-prop-of-samples-in-clusters.png"),
+      width = 8, height = 8, units = "in"))
+dev.off()
