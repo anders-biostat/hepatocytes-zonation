@@ -1,12 +1,17 @@
 
 rdsDir <- file.path("results", "rds")
 figdir <- file.path("results", "figs")
+tabledir <- file.path("results", "tables")
 
 figpattern <- function(pattern, ...) {
   x <- glue::glue(pattern, ...)
   file.path(figdir, x)
 }
 
+tablepattern <- function(pattern, ...) {
+    x <- glue::glue(pattern, ...)
+    file.path(tabledir, x)
+}
 
 getCounts <- function() {
   countsFile <- file.path(rdsDir, "allcouts.rds")

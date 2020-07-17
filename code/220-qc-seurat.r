@@ -53,8 +53,16 @@ for (tissue in tissues) {
   }
 }
 
+## compare heps and lsec
+x <- FindMarkers(seu, ident.1 = "LSEC", ident.2 = "HEP", group.by = "Cell.type")
+write.csv(x, tablepattern("lsec-vs-heps-seurat-find-markers.csv"))
+
+
 marks <- c(
   "pecam1",
+  "stab2",
+  "lyve1",
+  "kdr",
   "apoa1",
   "glul",
   "acly",
@@ -67,5 +75,5 @@ marks <- c(
   "pck1",
   "g6pc"
 )
-FeaturePlot(seu, marks)
-FeaturePlot(seuHEP, marks)
+q <- FeaturePlot(seu, marks)
+ggsave(figpattern("umap-markers.png"), q, width = 12, height = 12, dpi = 100)
