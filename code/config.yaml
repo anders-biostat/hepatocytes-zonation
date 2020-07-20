@@ -1,0 +1,29 @@
+markers-lsec:
+  - pcam1
+  - cdh5
+  - aqp1
+  - stab2
+  - lyve1
+  - clec4g
+  - mcam
+  - kdr
+  - eng
+
+markers-hep:
+  - alb
+  - serpina1e
+  - serpina1d
+  - serpina3k
+  - ahsg
+  - cp
+  - apoh
+
+markers-stellate:
+  - dcn
+  - ecm1
+  - gdf2
+  - prelp
+
+markers-kupfer:
+  - clec4f
+  - adgre1
