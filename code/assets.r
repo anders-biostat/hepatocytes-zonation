@@ -29,10 +29,29 @@ getCellAnno <- function() {
   cellanno
 }
 
+getBarcodes <- function(celltype) {
+  readRDS(file.path(rdsDir,
+    glue::glue("selected-{celltype}.rds", celltype = celltype)))
+}
+
+getCountsCelltype <- function(celltype) {
+  counts <- getCounts()
+  counts[, getBarcodes(celltype)]
+}
+
+getCellAnnoCelltype <- function(celltype) {
+  cellanno <- getCellAnno()
+  cellanno[match(getBarcodes(celltype), cellanno$barcode), ]
+}
+
 loads <- list(
   counts = getCounts,
+  "counts-heps" = getCountsCelltype("heps"),
+  "counts-lsec" = getCountsCelltype("lsec"),
   meta = function() readRDS(file.path(rdsDir, "meta.rds")),
   cellanno = getCellAnno,
+  "cellanno-heps" = getCellAnnoCelltype("heps"),
+  "cellanno-lsec" = getCellAnnoCelltype("lsec"),
   markers = function() getZoneMarkers()
 )
 
