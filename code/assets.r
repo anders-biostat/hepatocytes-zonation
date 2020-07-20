@@ -7,7 +7,7 @@ loadConfig <- function()
   yaml::read_yaml("code/config.yaml")
 
 figpattern <- function(pattern, ...) {
-  x <- glue::glue(pattern, ...)
+  x <- glue::glue(pattern, ..., .envir = parent.frame())
   file.path(figdir, x)
 }
 
