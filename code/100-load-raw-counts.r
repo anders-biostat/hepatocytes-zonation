@@ -38,15 +38,19 @@ shapeCounts <- function(x) {
 
 sparseCounts <- map(counts, shapeCounts)
 allcounts <- do.call(cbind, sparseCounts)
+colnames(allcounts) <- gsub("Batch", "", colnames(allcounts))
 saveRDS(allcounts, file.path("results", "rds", "allcouts.rds"))
 
 
 meta$ID <- sub("_.+", "", meta$ID, perl = TRUE)
-barcodes <- gsub("Batch", "", colnames(allcounts))
+barcodes <- colnames(allcounts)
 cellanno <- data.frame(
   barcode = barcodes,
+  # 16015_378632_Cell_6 -> 16015_378632
   ID = gsub("_Cell.+", "", barcodes),
   stringsAsFactors = FALSE)
+# 16015_378632 -> 378632
+ID = gsub("_Cell.+", "", barcodes),
 cellanno$ID <- sub(".+_", "", cellanno$ID)
 cellanno <- cellanno %>% left_join(meta)
 saveRDS(cellanno, file.path("results", "rds", "cellanno.rds"))
