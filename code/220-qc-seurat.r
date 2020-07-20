@@ -45,6 +45,7 @@ for (tissue in tissues) {
 for (tissue in tissues) {
   for (grouping in list(
     list("condition",          "condition"),
+    list("seurat_clusters",    "cluster"),
     list("Experimental.Batch", "batches"),
     list("Mouse.ID",           "mouse"))) {
     q <- UMAPPlot(seus[[tissue]], group.by = grouping[[1]])
@@ -53,33 +54,24 @@ for (tissue in tissues) {
   }
 }
 
-## compare heps and lsec
-x <- FindMarkers(seu, ident.1 = "LSEC", ident.2 = "HEP", group.by = "Cell.type")
-write.csv(x, tablepattern("lsec-vs-heps-seurat-find-markers.csv"))
+markers <- loadConfig()$markers
+## all genes are found in count matrix
+setdiff(unlist(markers),  rownames(counts))
 
-
-marks <- c(
-  "pecam1",
-  "stab2",
-  "lyve1",
-  "kdr",
-  "apoa1",
-  "glul",
-  "acly",
-  "asl",
-  "cyp2e1",
-  "cyp2f2",
-  "ass1",
-  "alb",
-  "mup3",
-  "pck1",
-  "g6pc"
-)
-q <- FeaturePlot(seu, marks)
-ggsave(figpattern("umap-markers.png"), q, width = 12, height = 12, dpi = 100)
+## plot expression of marker gene for all and for every sorting
+purrr::iwalk(list(
+  "all" = seu,
+  "HEP" = seus$HEP,
+  "LSEC" = seus$LSEC), function(seuobj, celltype) {
+    q <- FeaturePlot(seuobj, unlist(markers))
+    ggsave(figpattern("umap-markers-{name}.png", name = celltype),
+      q, width = 13, height = 13, dpi = 200)
+  })
 
 q <- UMAPPlot(seu, group.by = "Mouse.ID", split.by = "Cell.type")
 ggsave(figpattern("umap-all-by-celltype.png"), q, width = 10, height = 5, dpi = 200)
+
+s <- FindAllMarkers(seus$LSEC)
 
 ## plot how samples contribute to clusters and how sampels are spread among clusters
 with(seu@meta.data,
