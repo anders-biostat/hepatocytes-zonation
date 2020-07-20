@@ -46,12 +46,12 @@ getCellAnnoCelltype <- function(celltype) {
 
 loads <- list(
   counts = getCounts,
-  "counts-heps" = getCountsCelltype("heps"),
-  "counts-lsec" = getCountsCelltype("lsec"),
+  "counts-heps" = function() getCountsCelltype("heps"),
+  "counts-lsec" = function() getCountsCelltype("lsec"),
   meta = function() readRDS(file.path(rdsDir, "meta.rds")),
   cellanno = getCellAnno,
-  "cellanno-heps" = getCellAnnoCelltype("heps"),
-  "cellanno-lsec" = getCellAnnoCelltype("lsec"),
+  "cellanno-heps" = function() getCellAnnoCelltype("heps"),
+  "cellanno-lsec" = function() getCellAnnoCelltype("lsec"),
   markers = function() getZoneMarkers()
 )
 
