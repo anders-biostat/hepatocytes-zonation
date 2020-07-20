@@ -3,6 +3,9 @@ rdsDir <- file.path("results", "rds")
 figdir <- file.path("results", "figs")
 tabledir <- file.path("results", "tables")
 
+loadConfig <- function()
+  yaml::read_yaml("code/config.yaml")
+
 figpattern <- function(pattern, ...) {
   x <- glue::glue(pattern, ...)
   file.path(figdir, x)
