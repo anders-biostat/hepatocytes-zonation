@@ -85,3 +85,9 @@ with(seu@meta.data,
     pheatmap(filename = figpattern("all-prop-of-samples-in-clusters.png"),
       width = 8, height = 8, units = "in"))
 dev.off()
+
+saveRDS(list(
+  all = seu,
+  HEP = seus$HEP,
+  LSEC = seus$LSEC
+), file = file.path(rdsDir, "seurats-qc.rds"))
