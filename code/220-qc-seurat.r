@@ -4,6 +4,8 @@ source("code/func.r")
 source("code/assets.r")
 library(Seurat)
 library(ggplot2)
+library(dplyr)
+library(pheatmap)
 
 counts <- loadFiles("counts")
 cellanno <- loadFiles("cellanno")
@@ -72,20 +74,16 @@ purrr::iwalk(list(
 q <- UMAPPlot(seu, group.by = "Mouse.ID", split.by = "Cell.type")
 ggsave(figpattern("umap-all-by-celltype.png"), q, width = 10, height = 5, dpi = 200)
 
-s <- FindAllMarkers(seus$LSEC)
-
 ## plot how samples contribute to clusters and how sampels are spread among clusters
 with(seu@meta.data,
   table(seurat_clusters, sample) %>% prop.table(2) %>%
     pheatmap(filename = figpattern("all-prop-of-clusters-in-samples.png"),
       width = 8, height = 8, units = "in"))
-dev.off()
 
 with(seu@meta.data,
   table(seurat_clusters, sample) %>% prop.table(1) %>%
     pheatmap(filename = figpattern("all-prop-of-samples-in-clusters.png"),
       width = 8, height = 8, units = "in"))
-dev.off()
 
 saveRDS(list(
   all = seu,
