@@ -3,6 +3,7 @@
 source("code/func.r")
 source("code/assets.r")
 library(Seurat)
+library(ggplot2)
 
 counts <- loadFiles("counts")
 cellanno <- loadFiles("cellanno")
