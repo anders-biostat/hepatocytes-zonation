@@ -7,7 +7,7 @@ library(Matrix)
 
 source("code/assets.r")
 source("code/func.r")
-figpath <- function(x) file.path("results", "figs", x)
+figpath <- function(x) file.path("results", "figs", "qc", x)
 
 counts <- loadFiles("counts")
 cellanno <- loadFiles("cellanno")

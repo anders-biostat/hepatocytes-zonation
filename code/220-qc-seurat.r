@@ -9,6 +9,7 @@ library(pheatmap)
 
 counts <- loadFiles("counts")
 cellanno <- loadFiles("cellanno")
+figdir <- file.path("results", "figs", "qc")
 
 cellanno$sample <- paste(cellanno$condition, cellanno$Mouse.ID, cellanno$Experimental.Batch)
 
