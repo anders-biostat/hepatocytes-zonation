@@ -1,3 +1,7 @@
+## Zonation of hepatocytes
+## - exploratory plots
+## - zone assignment
+
 library(Matrix)
 library(purrr)
 library(ggplot2)
@@ -6,64 +10,163 @@ library(tidyr)
 library(pheatmap)
 source("code/func.r")
 source("code/assets.r")
-figdir <- file.path("results", "figs")
-figpath <- function(x) file.path(figdir, x)
 
+figdir <- file.path("results", "figs", "zonation")
 
 {cat("reading...")
-  counts <- loadFiles("counts")
-  meta <- loadFiles("meta")
-  cellanno <- loadFiles("cellanno")
+  counts <- loadFiles("counts-heps")
+  cellanno <- loadFiles("cellanno-heps")
   totals <- colSums(counts)
   fracs <- t(t(counts) / totals)
-  markers <- loadFiles("markers")
+  markers <- loadFiles("markers")$itzkevitz
+  markers <- add6LandMarks(markers)
+
+  setdiff(unlist(markers), rownames(counts))
+  ## character(0)
+
+  # table with [type: portal/central], [gene name]
+  markerAnnotation <- bind_rows(
+    map(markers,  ~ data.frame(gene = .x, row.names = .x)),
+    .id = "type")
+
   cat("OK\n")
 }
 
-setdiff(unlist(markers$itzkevitz), rownames(counts))
-## character(0)
+## create data frames with expression fracs and eta
+conditions <- c("HEP|DoubleKO", "HEP|Wildtype")
+etaDF <- map(set_names(conditions),
+  function(condition) {
+    cells <- cellanno$condition == condition
+    makeEtaDF(cells, cellanno, totals, fracs, markers)
+  })
+etaDFwide <- map(etaDF, ~ pivot_wider(.x, names_from = "gene", values_from = "frac"))
 
-## select condition
-sets <- list(
-  "HEP-WT"  = cellanno$Cell.type == "HEP"  & cellanno$Genotype != "DoubleKO",
-  "HEP-DKO" = cellanno$Cell.type == "HEP"  & cellanno$Genotype == "DoubleKO",
-  "LSEC-WT" = cellanno$Cell.type == "LSEC" & cellanno$Genotype != "DoubleKO",
-  "LSEC-DKO" = cellanno$Cell.type == "LSEC" & cellanno$Genotype == "DoubleKO"
-)
+## plot correlations for marker genes
+for (condition in conditions) {
+  m <- as.matrix(etaDFwide[[condition]][, -(1:3)])
+  corr <- cor(m)
+  pheatmap(corr,
+    filename = figpattern("correlation-{cond}.png", cond = condition),
+    annotation_row = markerAnnotation["type"],
+    width = 8, height = 8)
+  pheatmap(corr,
+    filename = figpattern("correlation-{cond}-no-clust.png", cond = condition),
+    annotation_row = markerAnnotation["type"],
+    cluster_rows = FALSE,
+    cluster_cols = FALSE,
+    width = 8, height = 8)
+}
+
+## plot heatmaps with cells ordered by eta
+## we scale sqrt of fracs by quantile
+## change breaks to deal with outliers
+for (condition in conditions) {
+  cells <- order(etaDFwide[[condition]]$eta)
+  m <- as.matrix(etaDFwide[[condition]][, -(1:3)])
+  m <- t(scaleByQuantile(sqrt(m), .99, 2))[, cells]
+  colnames(m) <- etaDFwide[[condition]]$cell
+  zones <- data.frame(eta = etaDFwide[[condition]]$eta)[cells,, drop = FALSE]
+  zoneNum <- 5
+  zones <- zones %>%
+    mutate(etaq = rank(eta) / length(eta), zone = cut(etaq, 0:zoneNum / zoneNum))
+  rownames(zones) <- colnames(m)
+  pheatmap(m,
+    filename = figpattern("marker-heatmap-cells-{condition}.png"),
+    annotation_row = markerAnnotation["type"],
+    width = 12, height = 8,
+    show_colnames = FALSE,
+    breaks = seq(0, quantile(m, .99), length.out = 100),
+    cluster_cols = FALSE)
+  pheatmap(m,
+    filename = figpattern("marker-heatmap-cells-{condition}-no-clust.png"),
+    annotation_row = markerAnnotation["type"],
+    show_colnames = FALSE,
+    width = 12, height = 8,
+    breaks = seq(0, quantile(m, .99), length.out = 100),
+    cluster_cols = FALSE, cluster_rows = FALSE)
+  zoneColor <- colorRampPalette(c("blue", "red"))(zoneNum)
+  names(zoneColor) <- levels(zones$zone)
+  pheatmap(m,
+    filename = figpattern("marker-heatmap-cells-{condition}-clust.png"),
+    annotation_row = markerAnnotation["type"],
+    annotation_col = zones["zone"],
+    annotation_colors = list(zone = zoneColor),
+    show_colnames = FALSE,
+    width = 12, height = 8,
+    breaks = seq(0, quantile(m, .99), length.out = 100))
+}
+
+## pca vs eta
+for (condition in conditions) {
+  m <- as.matrix(etaDFwide[[condition]][, -(1:3)])
+  scaledM <- scaleByQuantile(sqrt(m), .99)
+  pr <- prcomp(scaledM)
+  png(figpattern("pca-fracs-vs-eta-{cond}.png", cond = condition),
+    width = 12, height = 12, res = 200, units = "in")
+  par(mfrow = c(4, 4))
+  batches <- filter(cellanno, condition == !!condition)$Experimental.Batch
+  for (i in 1:16)
+    plot(etaDFwide[[condition]]$eta, pr$x[, i],
+      xlab = "eta",
+      ylab = sprintf("PC%d", i),
+      col = batches)
+  dev.off()
+}
 
 ## plot marker expression vs eta
-for(i in names(sets)[1:2]) {
-  d <- makeEtaDF(sets[[i]], cellanno, totals, fracs, markers$itzkevitz)
+for(i in conditions) {
+  d <- etaDF[[i]]
   ## plot expression along eta and smoothing
   q <- d %>%
-    ggplot(data= .) +
-    geom_smooth(aes(x = rank(eta), y = frac), method = "loess") +
+    ggplot(data = .) +
+    geom_smooth(aes(x = rank(eta), y = sqrt(frac)), method = "loess") +
     facet_wrap(~gene, scales = "free_y")
-  ggsave(filename = figpath(sprintf("marker-frac-smooth-eta-%s.png", i)),
+  ggsave(filename = figpattern("marker-frac-smooth-eta-{i}.png", i = i),
     q, width = 12, height = 8, dpi = 200)
 
   q <- d %>%
-    ggplot(data= .) +
-    geom_smooth(aes(x = rank(eta), y = frac), method = "loess") +
-    geom_point(aes(x = rank(eta), y = frac), shape = ".") +
+    ggplot(data = .) +
+    geom_smooth(aes(x = rank(eta), y = sqrt(frac)), method = "loess") +
+    geom_point(aes(x = rank(eta), y = sqrt(frac)), shape = ".") +
     facet_wrap(~gene, scales = "free_y")
-  ggsave(filename = figpath(sprintf("marker-frac-smooth-points-eta-%s.png", i)),
+  ggsave(filename = figpattern("marker-frac-smooth-points-eta-{i}.png", i = i),
     q, width = 12, height = 8, dpi = 200)
 
   q <- d %>%
-    ggplot(data= .) +
-    geom_point(aes(x = rank(eta), y = frac*total), shape = ".") +
+    ggplot(data = .) +
+    geom_point(aes(x = rank(eta), y = frac * total), shape = ".") +
+    ylab("count") +
     facet_wrap(~gene, scales = "free")
 
-  ggsave(filename = figpath(sprintf("marker-count-vs-eta-%s.png", i)),
+  ggsave(filename = figpattern(sprintf("marker-count-vs-eta-{i}.png", i = i)),
     q, width = 12, height = 8, dpi = 200)
 
 }
 
+colours <- set_names(c("dodgerblue", "black"), conditions)
+
+plotCompareExpressionOverEta <- function() {
+  x <- bind_rows(etaDF, .id = "condition")
+  q <- qplot(
+    data = x,
+    x = eta,
+    colour =  condition,
+    y = sqrt(frac),
+    alpha = I(.5),
+    size = I(.1)) +
+    scale_colour_manual(values = colours) +
+    guides(colour = guide_legend(override.aes = list(size = 2))) +
+    facet_wrap(~gene, scales = "free_y")
+  q
+}
+
+q <- plotCompareExpressionOverEta()
+ggsave(filename = figpattern("compare-hep-marker-vs-eta.png"),
+  plot = q, width = 16, height = 12, dpi = 200)
 
 averageGenesOverZones <- function(d, zoneNum) {
   x <- d %>%
-    mutate(etaq = rank(eta)/length(eta), zone = cut(etaq, 0:zoneNum/zoneNum))
+    mutate(etaq = rank(eta) / length(eta), zone = cut(etaq, 0:zoneNum / zoneNum))
   x <- x %>%
     select(gene, zone, frac) %>%
     group_by(gene, zone) %>%
@@ -77,64 +180,15 @@ averageGenesOverZones <- function(d, zoneNum) {
 }
 
 ## plot heatmaps for average expression at quantiles of eta
-for(i in names(sets)[1:2]) {
-  d <- makeEtaDF(sets[[i]], cellanno, totals, fracs, markers$itzkevitz)
-  m <- averageGenesOverZones(d, zoneNum = 6)
-
-  pheatmap(
-    m,
-    scale = "row",
-    cluster_cols = FALSE,
-    cluster_rows = TRUE)
-
-  fn <- figpath(sprintf("marker-heatmap-zones-%s.png", i))
-
-  geneType <- data.frame(
-    marker = c("portal", "central")[1 + rownames(m) %in% markers$itzkevitz$central])
-  rownames(geneType) <- rownames(m)
-
+for (condition in conditions) {
+  m <- averageGenesOverZones(etaDF[[condition]], zoneNum = 6)
+  fn <- figpattern("marker-heatmap-zones-{condition}.png")
   pheatmap(
     filename = fn,
-    annotation_row = geneType,
+    annotation_row = markerAnnotation[, "type", drop = FALSE],
     m,
     scale = "row",
     cluster_cols = FALSE,
     cluster_rows = TRUE,
     width = 10, height = 8, res = 200)
-
-  x <- d %>% pivot_wider(names_from = gene, values_from = frac)
-  x <- x[,-(1:3)]
-  x <- as.matrix(x)
-  x <- cor(x)
-
-  pheatmap(x,
-    filename = figpath(sprintf("marker-corr-%s.png", i)),
-    breaks = seq(-.2,.2, length.out = 100),
-    cluster_cols = FALSE,
-    cluster_rows = FALSE)
-
 }
-
-
-plotCompareExpressionOverEta <- function() {
-
-  ds <- lapply(names(sets)[1:2], function(i)
-    d <- makeEtaDF(sets[[i]], cellanno, totals, fracs, markers$itzkevitz))
-  names(ds) <- names(sets)[1:2]
-
-  x <- bind_rows(ds, .id = "condition")
-  q <- qplot(
-    data = x,
-    x = eta,
-    colour =  condition,
-    y = frac,
-    alpha = .5,
-    size = I(.2)) +
-    guides(colour = guide_legend(override.aes = list(size = 2))) +
-    facet_wrap(~gene, scales = "free_y")
-  q
-}
-
-q <- plotCompareExpressionOverEta()
-ggsave(filename = figpath("compare-hep-marker-vs-eta.png"),
-  plot = q, width = 12, height = 10, dpi = 200)
