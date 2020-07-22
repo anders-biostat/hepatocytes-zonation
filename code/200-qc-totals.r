@@ -21,6 +21,7 @@ qbox <- cbind(cellanno, total = totals) %>%
   ggplot(data = .) +
   geom_boxplot(aes(y = total, x = paste(condition, mouse, batch))) +
   scale_y_log10() +
+  xlab("") +
   coord_flip()
 ggsave(filename = figpath("total-counts-box.png"), qbox, dpi = 200, width = 9, height = 6)
 
