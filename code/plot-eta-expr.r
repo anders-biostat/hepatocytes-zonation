@@ -40,6 +40,7 @@ etaDF <- map(set_names(conditions),
     makeEtaDF(cells, cellanno, totals, fracs, markers)
   })
 etaDFwide <- map(etaDF, ~ pivot_wider(.x, names_from = "gene", values_from = "frac"))
+cellannoByCond <- split(cellanno, cellanno$condition)
 
 ## plot correlations for marker genes
 for (condition in conditions) {
