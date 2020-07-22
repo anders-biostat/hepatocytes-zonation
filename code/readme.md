@@ -39,3 +39,55 @@ calcEta <- function(x, markers) {
   res <- x$portal / (x$portal + x$central)
 }
 ```
+
+## Figures
+
+
+```
+../results/figs/
+├── qc
+│   ├── all-prop-of-clusters-in-samples.png
+│   ├── all-prop-of-samples-in-clusters.png
+│   ├── pca-pbulks.png
+│   ├── qc-correlation-all.png
+│   ├── qc-dendrogram-bulks.png
+│   ├── total-counts-density.png
+│   ├── total-counts.png
+│   ├── umap-all-by-celltype.png
+│   ├── umap-all-samples-batches.png
+│   ├── umap-all-samples-mouse.png
+│   ├── umap-all-samples.png
+│   ├── umap-HEP-batches.png
+│   ├── umap-HEP-cluster.png
+│   ├── umap-HEP-condition.png
+│   ├── umap-HEP-mouse.png
+│   ├── umap-LSEC-batches.png
+│   ├── umap-LSEC-cluster.png
+│   ├── umap-LSEC-condition.png
+│   ├── umap-LSEC-mouse.png
+│   ├── umap-markers-all.png
+│   ├── umap-markers-HEP.png
+│   └── umap-markers-LSEC.png
+└── zonation
+    ├── compare-hep-marker-vs-eta.png
+    ├── correlation-HEP|DoubleKO-no-clust.png
+    ├── correlation-HEP|DoubleKO.png
+    ├── correlation-HEP|Wildtype-no-clust.png
+    ├── correlation-HEP|Wildtype.png
+    ├── marker-count-vs-eta-HEP|DoubleKO.png
+    ├── marker-count-vs-eta-HEP|Wildtype.png
+    ├── marker-frac-smooth-eta-HEP|DoubleKO.png
+    ├── marker-frac-smooth-eta-HEP|Wildtype.png
+    ├── marker-frac-smooth-points-eta-HEP|DoubleKO.png
+    ├── marker-frac-smooth-points-eta-HEP|Wildtype.png
+    ├── marker-heatmap-cells-HEP|DoubleKO-clust.png
+    ├── marker-heatmap-cells-HEP|DoubleKO-no-clust.png
+    ├── marker-heatmap-cells-HEP|DoubleKO.png
+    ├── marker-heatmap-cells-HEP|Wildtype-clust.png
+    ├── marker-heatmap-cells-HEP|Wildtype-no-clust.png
+    ├── marker-heatmap-cells-HEP|Wildtype.png
+    ├── marker-heatmap-zones-HEP|DoubleKO.png
+    ├── marker-heatmap-zones-HEP|Wildtype.png
+    ├── pca-fracs-vs-eta-HEP|DoubleKO.png
+    └── pca-fracs-vs-eta-HEP|Wildtype.png
+```
