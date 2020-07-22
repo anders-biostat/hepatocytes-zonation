@@ -17,6 +17,13 @@ cellanno$mouse <- factor(cellanno$Mouse.ID)
 
 totals <- colSums(counts)
 
+qbox <- cbind(cellanno, total = totals) %>%
+  ggplot(data = .) +
+  geom_boxplot(aes(y = total, x = paste(condition, mouse, batch))) +
+  scale_y_log10() +
+  coord_flip()
+ggsave(filename = figpath("total-counts-box.png"), qbox, dpi = 200, width = 9, height = 6)
+
 qraw <- qplot(y = totals, log = 'y', colour = cellanno$batch) +
   scale_colour_discrete(name = "batch")
 ggsave(filename = figpath("total-counts.png"), qraw, dpi = 200, width = 9, height = 6)
