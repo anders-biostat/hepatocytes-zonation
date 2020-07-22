@@ -19,8 +19,17 @@
 
 ## Zone assignment
 
-We use 23 + 30 markers from Shalev 2018 Supplementary.
-Normalize by maximal value of every gene, then sum central and portal up.
+We use 21 + 33 markers from Shalev 2018 Supplementary.
+Itzkovitz uses maximal expression as normalizing factor.
+It can work for a single condition, but in case of decreased expression
+due to k.o., RNA level can be much lower. In limiting case,
+cells with a single read will be "portal" or "central", although,
+in the wild type such low level of expression would indicate
+an opposite phenotype.
+
+Nevertheless, we followed this way for exploratory analysis with the difference,
+that we normalize using 99% quantile instead of maximum.
+
 \Eta is a proportion of portal gene over portal + central.
 ```
 calcEta <- function(x, markers) {
