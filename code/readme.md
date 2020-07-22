@@ -34,7 +34,7 @@ that we normalize using 99% quantile instead of maximum.
 ```
 calcEta <- function(x, markers) {
   x <- map(markers, ~ x[.x, ])
-  x <- map(x, normByMax)
+  x <- map(x, scaleByQuantile)
   x <- map(x, colSums)
   res <- x$portal / (x$portal + x$central)
 }
