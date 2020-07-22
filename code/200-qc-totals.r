@@ -39,7 +39,7 @@ m <- model.matrix(~ sample + 0,
 ## Sum up pseudobulks/normalize by total and plot hclust for moderate expression
 pbulks <- counts %*% m
 colnames(pbulks) <- gsub("sample", "", colnames(pbulks))
-normedBulks <- t(pbulks) /colSums(pbulks)
+normedBulks <- t(pbulks) / colSums(pbulks)
 expressed <- rowMeans(pbulks) > 10
 
 x <- cor(as.matrix(t(normedBulks[, expressed])))
