@@ -146,7 +146,7 @@ for(i in conditions) {
 
 colours <- set_names(c("dodgerblue", "black"), conditions)
 
-plotCompareExpressionOverEta <- function() {
+plotCompareExpressionOverEta <- function(etaDF) {
   x <- bind_rows(etaDF, .id = "condition")
   q <- qplot(
     data = x,
@@ -161,8 +161,40 @@ plotCompareExpressionOverEta <- function() {
   q
 }
 
-q <- plotCompareExpressionOverEta()
+q <- plotCompareExpressionOverEta(etaDF)
 ggsave(filename = figpattern("compare-hep-marker-vs-eta.png"),
+  plot = q, width = 16, height = 12, dpi = 200)
+
+
+plotCompareExpressionOverEtaRank <- function(etaDF, alpha = .5) {
+  x <- bind_rows(etaDF, .id = "condition")
+  x <- x %>% group_by(condition) %>%
+    mutate(etaRank = percent_rank(eta))
+
+  q <- qplot(
+    data = x,
+    x = etaRank,
+    colour =  condition,
+    y = sqrt(frac),
+    alpha = I(alpha),
+    size = I(.1)) +
+    scale_colour_manual(values = colours) +
+    guides(colour = guide_legend(override.aes = list(size = 2))) +
+    facet_wrap(~gene, scales = "free_y")
+  q
+}
+
+q <- plotCompareExpressionOverEtaRank(etaDF)
+ggsave(filename = figpattern("compare-hep-marker-vs-eta-rank.png"),
+  plot = q, width = 16, height = 12, dpi = 200)
+
+qsmooth <- plotCompareExpressionOverEtaRank(etaDF, alpha = .1) +
+  geom_smooth(aes(x = etaRank, y = sqrt(frac)), method = "loess")
+ggsave(filename = figpattern("compare-hep-marker-vs-eta-rank-smooth.png"),
+  plot = qsmooth, width = 16, height = 12, dpi = 200)
+
+q <- q + facet_wrap(~gene, scales = "fixed")
+ggsave(filename = figpattern("compare-hep-marker-vs-eta-rank-fixed.png"),
   plot = q, width = 16, height = 12, dpi = 200)
 
 averageGenesOverZones <- function(d, zoneNum) {
