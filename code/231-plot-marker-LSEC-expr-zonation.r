@@ -43,7 +43,7 @@ cellannoByCond <- split(cellanno, cellanno$condition)
 
 ## plot correlations for marker genes
 for (condition in conditions) {
-  m <- as.matrix(etaDFwide[[condition]][, -(1:3)])
+  m <- as.matrix(etaDFwide[[condition]][, -(1:4)])
   corr <- cor(m)
   pheatmap(corr,
     filename = figpattern("correlation-{cond}.png", cond = condition),
@@ -62,13 +62,13 @@ for (condition in conditions) {
 ## change breaks to deal with outliers
 for (condition in conditions) {
   cells <- order(etaDFwide[[condition]]$eta)
-  m <- as.matrix(etaDFwide[[condition]][, -(1:3)])
+  m <- as.matrix(etaDFwide[[condition]][, -(1:4)])
   m <- t(scaleByQuantile(sqrt(m), .99, 2))[, cells]
   colnames(m) <- etaDFwide[[condition]]$cell
   zones <- data.frame(eta = etaDFwide[[condition]]$eta)[cells,, drop = FALSE]
   zoneNum <- 5
   zones <- zones %>%
-    mutate(etaq = rank(eta) / length(eta), zone = cut(etaq, 0:zoneNum / zoneNum))
+    mutate(etaq = cume_dist(eta), zone = cut(etaq, 0:zoneNum / zoneNum))
   rownames(zones) <- colnames(m)
   pheatmap(m,
     filename = figpattern("marker-heatmap-cells-{condition}.png"),
@@ -98,7 +98,7 @@ for (condition in conditions) {
 
 ## pca vs eta
 for (condition in conditions) {
-  m <- as.matrix(etaDFwide[[condition]][, -(1:3)])
+  m <- as.matrix(etaDFwide[[condition]][, -(1:4)])
   scaledM <- scaleByQuantile(sqrt(m), .99)
   pr <- prcomp(scaledM)
   png(figpattern("pca-fracs-vs-eta-{cond}.png", cond = condition),
@@ -116,31 +116,44 @@ for (condition in conditions) {
 ## plot marker expression vs eta
 for(i in conditions) {
   d <- etaDF[[i]]
+  d <- d %>%
+    mutate(etaq = cume_dist(eta))
   ## plot expression along eta and smoothing
   q <- d %>%
     ggplot(data = .) +
-    geom_smooth(aes(x = rank(eta), y = sqrt(frac)), method = "loess") +
+    geom_smooth(aes(x = etaq, y = sqrt(frac)), method = "loess") +
     facet_wrap(~gene, scales = "free_y")
   ggsave(filename = figpattern("marker-frac-smooth-eta-{i}.png", i = i),
     q, width = 12, height = 8, dpi = 200)
 
   q <- d %>%
     ggplot(data = .) +
-    geom_smooth(aes(x = rank(eta), y = sqrt(frac)), method = "loess") +
-    geom_point(aes(x = rank(eta), y = sqrt(frac)), shape = ".") +
+    geom_smooth(aes(x = etaq, y = sqrt(frac)), method = "loess") +
+    geom_point(aes(x = etaq, y = sqrt(frac)), shape = ".") +
     facet_wrap(~gene, scales = "free_y")
   ggsave(filename = figpattern("marker-frac-smooth-points-eta-{i}.png", i = i),
     q, width = 12, height = 8, dpi = 200)
 
   q <- d %>%
     ggplot(data = .) +
-    geom_point(aes(x = rank(eta), y = frac * total), shape = ".") +
+    geom_point(aes(x = etaq, y = frac * total), shape = ".") +
     ylab("count") +
     facet_wrap(~gene, scales = "free")
-
   ggsave(filename = figpattern(sprintf("marker-count-vs-eta-{i}.png", i = i)),
     q, width = 12, height = 8, dpi = 200)
 
+  d <- d %>% inner_join(cellanno, by = c(cell = "barcode")) %>%
+    mutate(sample = paste(Mouse.ID, Experimental.Batch))
+  q <- d %>%
+    ggplot(data = .) +
+    geom_point(aes(
+      x = etaq,
+      y = sqrt(frac),
+      colour = sample),
+      shape = ".") +
+    facet_wrap(~gene, scales = "free_y")
+  ggsave(filename = figpattern(sprintf("marker-frac-vs-eta-by-mouse-{i}.png", i = i)),
+    q, width = 12, height = 8, dpi = 200)
 }
 
 colours <- set_names(c("dodgerblue", "black"), conditions)
@@ -150,7 +163,7 @@ plotCompareExpressionOverEta <- function(etaDF) {
   q <- qplot(
     data = x,
     x = eta,
-    colour =  condition,
+    colour = condition,
     y = sqrt(frac),
     alpha = I(.5),
     size = I(.1)) +
@@ -167,13 +180,11 @@ ggsave(filename = figpattern("compare-lsec-marker-vs-eta.png"),
 
 plotCompareExpressionOverEtaRank <- function(etaDF, alpha = .5) {
   x <- bind_rows(etaDF, .id = "condition")
-  x <- x %>% group_by(condition) %>%
-    mutate(etaRank = cume_dist(eta)) %>%
-    filter(!is.na(etaRank))
-
+  x <- x %>%
+    mutate(etaq = cume_dist(eta))
   q <- qplot(
     data = x,
-    x = etaRank,
+    x = etaq,
     colour =  condition,
     y = sqrt(frac),
     alpha = I(alpha),
@@ -189,7 +200,7 @@ ggsave(filename = figpattern("compare-lsec-marker-vs-eta-rank.png"),
   plot = q, width = 16, height = 12, dpi = 200)
 
 qsmooth <- plotCompareExpressionOverEtaRank(etaDF, alpha = .1) +
-  geom_smooth(aes(x = etaRank, y = sqrt(frac)), method = "loess")
+  geom_smooth(aes(x = etaq, y = sqrt(frac)), method = "loess")
 ggsave(filename = figpattern("compare-lsec-marker-vs-eta-rank-smooth.png"),
   plot = qsmooth, width = 16, height = 12, dpi = 200)
 
@@ -199,7 +210,7 @@ ggsave(filename = figpattern("compare-lsec-marker-vs-eta-rank-fixed.png"),
 
 averageGenesOverZones <- function(d, zoneNum) {
   x <- d %>%
-    mutate(etaq = rank(eta) / length(eta), zone = cut(etaq, 0:zoneNum / zoneNum))
+    mutate(etaq = cume_dist(eta), zone = cut(etaq, 0:zoneNum / zoneNum))
   x <- x %>%
     select(gene, zone, frac) %>%
     group_by(gene, zone) %>%

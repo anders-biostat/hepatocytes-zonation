@@ -82,9 +82,10 @@ makeEtaDF <- function(idx, cellanno, totals, fracs, markers, othergenes=NULL,
   d <- fracs[allgenes, ]
   d <- sparse2df(t(d))
   d$eta <- eta
+  d$odds <- eta / (1 - eta)
   d$total <- totals
   d$cell <- colnames(fracs)
-  d <- d %>% gather(gene, frac, -eta, -total, -cell)
+  d <- d %>% gather(gene, frac, -eta, -total, -cell, -odds)
   d$gene <- factor(d$gene, levels = unlist(allgenes))
   d
 }
