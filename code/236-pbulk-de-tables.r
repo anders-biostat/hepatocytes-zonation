@@ -1,10 +1,3 @@
-library(DESeq2)
-library(Matrix)
-library(purrr)
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(pheatmap)
 source("code/func.r")
 source("code/assets.r")
 
