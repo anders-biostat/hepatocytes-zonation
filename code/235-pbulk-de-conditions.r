@@ -22,10 +22,10 @@ makeDE <- function(counts, cellanno) {
 
   dds <- DESeq2::DESeqDataSetFromMatrix(pbulks, colData = bulkanno, design = ~ Genotype)
   dds <- DESeq2::DESeq(dds)
-  res <- DESeq2::results(dds)
+  res <- DESeq2::results(dds, contrast = c("Genotype", "Wildtype", "DoubleKO"))
 
   res <- res %>% as.data.frame %>% arrange(pvalue)
-  list(result = res, pbulks = pbulks, dds = dds, anno = bulkanno)
+  list(result = res, pbulks = pbulks, anno = bulkanno)
 }
 
 read <- function(cellType) {
