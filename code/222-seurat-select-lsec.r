@@ -5,6 +5,7 @@ source("code/func.r")
 source("code/assets.r")
 library(Seurat)
 
+figdir <- file.path("results", "figs", "qc")
 counts <- loadFiles("counts")
 cellanno <- loadFiles("cellanno")
 
@@ -15,6 +16,22 @@ table(lsec@meta.data$seurat_clusters)
 ##
 ## 0   1   2   3   4   5   6   7   8   9  10  11  12
 ## 580 397 319 309 301 254 122  55  55  20  19  18  18
+
+## we plot two ko genes and stellate cell markers, color by cluster 6
+plotKO <- function(lsec) {
+  genes <- c("prelp", "ecm1", "gdf2", "rspo3", "dcn", "wls")
+  totals <- colSums(lsec@assays$RNA@counts)
+  expr <- lsec@assays$RNA@counts[genes,]
+  i <- lsec$Genotype == "DoubleKO"
+  pairs(
+    jitter(as.matrix(t(expr) / totals)[i, ]),
+    pch = 16, cex = .8,
+    col = (d$LSEC$seurat_clusters == 6)[i] + 1)
+}
+
+png(figpattern("ko-gene-expr.png"), width = 7, height = 7, units = "in", res = 200)
+plotKO(lsec)
+dev.off()
 
 inuse <- colnames(lsec)[lsec@meta.data$seurat_clusters != 6]
 saveRDS(inuse, file.path(rdsDir, "selected-lsec.rds"))
