@@ -14,7 +14,7 @@ s <- readRDS(file.path(rdsDir, "seurats-qc.rds"))
 heps <- s$HEP
 inuse <- colnames(heps)[heps@meta.data$seurat_clusters != 4]
 
-mtpercent <- getMtPercent(counts, totals)
+mtpercent <- getGenePercent(counts, totals)
 
 d <- cbind(cellanno, mt = mtpercent, total = totals)
 q <- ggplot(data = d %>% filter(Cell.type == "HEP")) +

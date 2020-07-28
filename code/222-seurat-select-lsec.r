@@ -36,7 +36,7 @@ dev.off()
 inuse <- colnames(lsec)[lsec@meta.data$seurat_clusters != 6]
 saveRDS(inuse, file.path(rdsDir, "selected-lsec.rds"))
 
-mtpercent <- getMtPercent(counts, totals)
+mtpercent <- getGenePercent(counts, totals)
 d <- cbind(cellanno, mt = mtpercent, total = totals)
 q <- ggplot(data = d %>% filter(Cell.type == "LSEC")) +
   geom_point(aes(y = mt, x = total, colour = barcode %in% inuse), size = .5) +
