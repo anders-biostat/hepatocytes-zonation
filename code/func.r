@@ -90,3 +90,9 @@ makeEtaDF <- function(idx, cellanno, totals, fracs, markers, othergenes=NULL,
   d
 }
 
+
+getMtPercent <- function(counts, totals) {
+  mtgenes <- grepl("mt-", rownames(counts))
+  mtpercent <- colSums(counts[mtgenes, ]) / totals
+  mtpercent
+}
