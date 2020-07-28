@@ -26,6 +26,7 @@ getCounts <- function() {
 getCellAnno <- function() {
   cellanno <- readRDS(file.path(rdsDir, "cellanno.rds"))
   cellanno$condition <- with(cellanno, paste(Cell.type, Genotype, sep = "|"))
+  cellanno$sample <- paste(cellanno$condition, cellanno$Mouse.ID, cellanno$Experimental.Batch)
   cellanno
 }
 
