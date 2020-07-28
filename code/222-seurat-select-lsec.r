@@ -35,3 +35,12 @@ dev.off()
 
 inuse <- colnames(lsec)[lsec@meta.data$seurat_clusters != 6]
 saveRDS(inuse, file.path(rdsDir, "selected-lsec.rds"))
+
+mtpercent <- getMtPercent(counts, totals)
+d <- cbind(cellanno, mt = mtpercent, total = totals)
+q <- ggplot(data = d %>% filter(Cell.type == "LSEC")) +
+  geom_point(aes(y = mt, x = total, colour = barcode %in% inuse), size = .5) +
+  scale_x_log10() +
+  scale_colour_discrete(name = "selected") +
+  facet_wrap(~ sample, scales = "free_x")
+ggsave(figpattern("selected-lsec-mito-percent.png"), q, width = 10, height = 9, dpi = 200)
