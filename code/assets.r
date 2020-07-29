@@ -53,7 +53,8 @@ loads <- list(
   cellanno = getCellAnno,
   "cellanno-heps" = function() getCellAnnoCelltype("heps"),
   "cellanno-lsec" = function() getCellAnnoCelltype("lsec"),
-  markers = function() getZoneMarkers()
+  markers = function() getZoneMarkers(),
+  "functional-genes" = function() readRDS(file.path(rdsDir, "functional-genes.rds"))
 )
 
 loadFiles <- function(...) {

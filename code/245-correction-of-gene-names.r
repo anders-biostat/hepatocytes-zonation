@@ -40,11 +40,6 @@ hepatoList <- map(hepatoList, ~gsub(";.+", "", .x))
 allgenes <- unique(c(unlist(shalevList), unlist(hepatoList)))
 a <- setdiff(allgenes, rownames(counts))
 
-x <- map(a, ~
-agrep(.x, x = rownames(counts), max.distance = 1, value = TRUE))
-names(x) <- a
-map_int(x, length) %>% sort 
-
 capitalize <- function(x) {
   paste0(toupper(substring(x, 1, 1)), substring(x, 2))
 }
@@ -72,6 +67,14 @@ hepatoList <- map(hepatoList, correctGenes, alias2symbol)
 allgenes <- unique(c(unlist(shalevList), unlist(hepatoList)))
 a <- setdiff(allgenes, rownames(counts))
 
+x <- map(a, ~ agrep(.x, x = rownames(counts), max.distance = 1, value = TRUE))
+names(x) <- a
+map_int(x, length) %>% sort 
+
+shalevList <- map(shalevList, ~ .x[.x %in% rownames(counts)])
+hepatoList <- map(hepatoList, ~ .x[.x %in% rownames(counts)])
+saveRDS(list(shalev = shalevList, ki = hepatoList),
+        file.path(rdsDir, "functional-genes.rds"))
 
 library(biomaRt)
 ensembl <- useMart("ensembl", dataset = "mmusculus_gene_ensembl")
