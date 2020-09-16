@@ -1,11 +1,13 @@
-library(mgcv)
-library(locfit)
+## here we compare how zonation is different, if one uses
+## scaling to maximum or to .99 quantile.
+## It shows, that there is no drastic difference
+## We do not remap scaling to 0..1 interval, hence in .99
+## the values can be > 1.
 library(Matrix)
 library(purrr)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
-library(pheatmap)
 source("code/func.r")
 source("code/assets.r")
 
