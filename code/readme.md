@@ -32,8 +32,11 @@ cells with a single read will be "portal" or "central", although,
 in the wild type such low level of expression would indicate
 an opposite phenotype.
 
-Nevertheless, we followed this way for exploratory analysis with the difference,
-that we normalize using 99% quantile instead of maximum.
+
+~~Nevertheless, we followed this way for exploratory analysis with the difference,
+that we normalize using 99% quantile instead of maximum.~~
+We use maximum, there is no significant difference.
+
 
 \Eta is a proportion of portal gene over portal + central.
 ```
