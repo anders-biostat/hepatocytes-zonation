@@ -61,7 +61,7 @@ scaleByQuantile <- function(mat, prob, MARGIN = 2) {
     return(t(t(mat) / qs))
 }
 
-calcEta <- function(x, markers, prob = .99) {
+calcEta <- function(x, markers, prob = 1) {
   x <- map(markers, ~ x[.x, ])
   x <- map(x, scaleByQuantile, MARGIN = 1, prob = prob)
   x <- map(x, colSums)
