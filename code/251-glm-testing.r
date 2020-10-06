@@ -128,6 +128,7 @@ res$wtexpr <- apply(
 
 saveRDS(res, file.path(rdsDir, "glm-hepa-res.rds"))
 
+{## plot for presentation 
 x <- res %>%
   filter(`pval-0.2` < 1e-4, abs(`0.2`) > .7 ) %>%
   arrange(`pval-0.2` )
@@ -208,3 +209,6 @@ ggsave(
   filename = file.path(figdir, sprintf("missed-deseq-%s.png", g)), q,
   width = 13, height = 10, dpi = 200
 )
+
+
+}
