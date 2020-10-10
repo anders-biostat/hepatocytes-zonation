@@ -126,8 +126,6 @@ res[["pval-0.8"]] <- pnorm(res[,3], sd = res[,5], lower.tail = TRUE)
 res$wtexpr <- apply(
   counts[res$gene, dat$condition == "HEP|Wildtype"], 1, mean)
 
-saveRDS(res, file.path(rdsDir, "glm-hepa-res.rds"))
-
 {## plot for presentation 
 x <- res %>%
   filter(`pval-0.2` < 1e-4, abs(`0.2`) > .7 ) %>%
