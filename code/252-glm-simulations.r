@@ -74,13 +74,13 @@ Xpred$total <- 1e4
 modelform <- as.formula(
   sprintf("gene ~ -1 + offset(log(total)) + (%s):mouse",
     paste0(splineVars, collapse = "+")))
-
 qs <- map(rownames(hepde)[1:20], function(g) {
   try({
   m <- glm.nb(modelform, data = cbind(gene = counts[g,], mat))
   pred <- predict(m, newdata = Xpred)
   ggplot(data = cbind(dat, expr = pred) %>% arrange(etaq)) +
     geom_line(aes(x = etaq, y = expr, colour = condition, group = mouse)) +
+    theme(legend.position = "none") +
     ggtitle(g)
   })
 })
@@ -92,6 +92,7 @@ ggsave(filename = file.path(figdir, "fit-per-mouse.png"),
 ## take a gene with prominent difference and counts
 g <- "gulo"
 ## g <- "cyp2c37"
+
 ## model pro mouse and model pro condition
 modelform <- as.formula(
   sprintf("gene ~ -1 + offset(log(total)) + (%s):mouse",
@@ -109,8 +110,6 @@ modelform <- as.formula(
   paste("gene ~ -1 + offset(log(total)) +  ",
     paste0(sprintf("%s:condition +(0+%s|mouse)", splineVars, splineVars), collapse = "+")))
 mmixed <- lme4::glmer.nb(modelform, data = cbind(gene = counts[g,], mat))
-
-
 
 ## compare variances with simulations
 l <- list(mixed = mmixed, condition = mcondition, mouse = mmouse)
@@ -168,6 +167,8 @@ ggsave(filename = file.path(figdir, sprintf("%s-mixed-prediction.png", g)), q,
 
 
 ## simulate and estimate
+## take simulations from the mixed effect model and fit glm.nb many times,
+## compute average sd estimates with the sd for the fixed effect
 
 modelform <- as.formula(
   sprintf("gene ~ -1 + offset(log(total)) + (%s):condition",
@@ -200,3 +201,17 @@ simvar = do.call(rbind, map(x, "vcov") %>% map(diag)) %>% sqrt %>%
 ## conditionHEP|DoubleKO:X4 -12.856112  1.0833392 -11.86712  1.754105e-32 1.1107144
 ## conditionHEP|Wildtype:X5 -11.413403  0.2861650 -39.88399  0.000000e+00 0.2821492
 ## conditionHEP|DoubleKO:X5 -12.977334  0.6527144 -19.88210  5.814484e-88 0.6889879
+
+
+## 
+annctr <- data.frame(ctr = names(coef(mmouse)))
+annctr$mouse <- factor(gsub(".+mouse", "", annctr$ctr))
+annctr <- annctr %>% inner_join(
+  unique(data.frame(mouse = factor(dat$mouse), condition = dat$condition)))
+annctr$condition <- 
+ctr1 <- rep(0, length(coef(mmouse)))
+ctr1[1:3] <- 1/3
+fevar <- sd(coef(mmouse)[ctr1 > 0])^2
+ctrvar <- t(ctr1) %*% vcov(mmouse) %*% ctr1
+sqrt(fevar + ctrvar)
+coef(mmouse)
