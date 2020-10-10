@@ -62,7 +62,8 @@ fitModels <- function(counts, cellanno, markers,
     ## "gulo",
     function(.x) {
     try({
-      glm.nb(form, data = cbind(gene = counts[.x,], mat))
+      m <- glm.nb(form, data = cbind(gene = counts[.x,], mat))
+      list(coef = coef(m), vcov = vcov(m))
     })}, mc.cores = cores)
   models <- models[map(models, class) != "try-error"]
   list(models = models, mat = mat, splineVars = splineVars)
@@ -86,10 +87,11 @@ mouseform <- function(splineVars) {as.formula(
     paste0(splineVars, collapse = "+")))
 }
 
-mousemodels <- fitModels(counts, cellanno, markers, modelform = mouseform, cores = 8)
+mousemodels <- fitModels(counts, cellanno, markers, modelform = mouseform, cores = 7,
+  minproportion = .1)
 
-betas <- map(mousemodels$models, coef)
-vars <- map(mousemodels$models, vcov)
+betas <- map(mousemodels$models, "coef")
+vars <- map(mousemodels$models, "vcov")
 
 saveRDS(
   list(betas = betas, vars = vars, mat = mousemodels$mat),
@@ -104,10 +106,11 @@ saveRDS(
   cat("OK\n")
 }
 
-mousemodels <- fitModels(counts, cellanno, markers, modelform = mouseform, cores = 8)
+mousemodels <- fitModels(counts, cellanno, markers, modelform = mouseform, cores = 7,
+  minproportion = 0.1)
 
-betas <- map(mousemodels$models, coef)
-vars <- map(mousemodels$models, vcov)
+betas <- map(mousemodels$models, "coef")
+vars <- map(mousemodels$models, "vcov")
 
 saveRDS(
   list(betas = betas, vars = vars, mat = mousemodels$mat),
