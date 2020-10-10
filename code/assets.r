@@ -64,3 +64,13 @@ loadFiles <- function(...) {
   if (length(l) == 1) return(x[[1]])
   x
 }
+
+readCellType <- function(cellType) {
+  cat("reading...", cellType)
+  counts <- loadFiles(glue::glue("counts-{cellType}"))
+  cellanno <- loadFiles(glue::glue("cellanno-{cellType}"))
+  cellanno$sample <- paste(cellanno$condition, cellanno$Mouse.ID, cellanno$Experimental.Batch)
+  cellanno$mouse <- cellanno$Mouse.ID
+  cat("OK\n")
+  list(cellanno = cellanno, counts = counts)
+}
