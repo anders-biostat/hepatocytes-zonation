@@ -68,6 +68,7 @@ res <- list(
     geom_point(aes(x = etaq, y = value/total, colour = condition),
       shape = ".") +
     stat_smooth(aes(x = etaq, y = value/total, colour = condition)) +
+    scale_y_continuous(trans = "sqrt") +
     facet_wrap(~gene, scales = "free_y") +
     ylab("frac")
 
