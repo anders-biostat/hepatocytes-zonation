@@ -96,3 +96,10 @@ getGenePercent <- function(counts, totals, pattern = "mt-") {
   mtpercent <- colSums(counts[mtgenes, ]) / totals
   mtpercent
 }
+
+createSplineMat <- function(position, degree) {
+  X <- splines::bs(position, df = degree,
+    Boundary.knots = c(0,1), intercept = TRUE)
+  colnames(X) <- paste0("X", colnames(X))
+  X
+}

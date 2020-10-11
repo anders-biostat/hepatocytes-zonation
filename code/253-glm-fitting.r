@@ -40,12 +40,6 @@ assignPosition <- function(counts, cellanno, totals, fracs, markers) {
   res
 }
 
-createSplineMat <- function(position, degree) {
-  X <- splines::bs(position, df = degree,
-    Boundary.knots = c(0,1), intercept = TRUE)
-  colnames(X) <- paste0("X", colnames(X))
-  X
-}
 
 fitModels <- function(counts, cellanno, markers,
                       modelform, cores = 6, minproportion = 0.05) {
@@ -74,7 +68,6 @@ fitModels <- function(counts, cellanno, markers,
 
 {cat("reading...")
   d <- readCellType("heps")
-  s <- readRDS(file.path(rdsDir, "seurats-qc.rds"))
   counts <- d$counts; cellanno <- d$cellanno
   markers <- loadFiles("markers")$itzkevitz
   markers <- add6LandMarks(markers)
