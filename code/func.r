@@ -103,3 +103,24 @@ createSplineMat <- function(position, degree) {
   colnames(X) <- paste0("X", colnames(X))
   X
 }
+
+assignPosition <- function(counts, cellanno, totals, fracs, markers) {
+  conditions <- unique(cellanno$condition)
+  etadf <- map(set_names(conditions),
+    function(condition) {
+      cells <- cellanno$condition == condition
+      makeEtaDF(cells, cellanno, totals, fracs, markers)
+    })
+  etadf <- do.call(rbind, etadf)
+  res <- etadf %>% inner_join(cellanno, by = c(cell = "barcode")) %>%
+    group_by(sample) %>%
+    mutate(etaq = cume_dist(eta)) %>%
+    ungroup %>%
+    select(eta, etaq, cell) %>%
+    unique %>%
+    inner_join(cellanno, by = c(cell = "barcode"))
+  res$total <- totals
+  res$mouse <- factor(res$Mouse.ID)
+  res$condition <- factor(res$condition)
+  res
+}
