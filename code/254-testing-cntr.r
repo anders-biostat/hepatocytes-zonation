@@ -36,8 +36,8 @@ crossgroupVar <- function(beta, positions, X, wildmice, komice) {
   betamat <- matrix(beta, ncol = ncol(x))
   rownames(betamat) <- colmouse[seq_len(nrow(betamat))]
   ## divide by n^2 since it is var of mean for mice groups
-  vwild <- apply(betamat[wildmice,], 2, var)/ (length(wildmice))^2
-  vko <- apply(betamat[komice,], 2, var) / (length(komice))^2
+  vwild <- apply(betamat[wildmice,], 2, var)/ (length(wildmice)-1)
+  vko <- apply(betamat[komice,], 2, var) / (length(komice)-1)
   (x*x)%*%(vko + vwild)
 }
 
