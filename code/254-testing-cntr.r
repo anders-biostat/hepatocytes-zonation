@@ -30,6 +30,18 @@ createContrasts <- function(positions, splineVars, X, wildmice, komice) {
   h
 }
 
+## additional variance is estimated using the model fit:
+## if means for conditions are m1 and m2, then
+## variance of the contrast m1 - m2 is var(m1) + var(m2)
+## where var(m1) is Bessel's correction variance of the mean
+## across the mouse group.
+## First, we estimate in-group variance for every beta.
+## Then, the final variance at the position is multiplied with the spline
+## x^T %*% V %*% x
+##         1     2     3     4
+## 0.2 0.512 0.384 0.096 0.008
+## 0.5 0.125 0.375 0.375 0.125
+## 0.8 0.008 0.096 0.384 0.512
 crossgroupVar <- function(beta, positions, X, wildmice, komice) {
   x <- predict(X, positions)
   colmouse <- gsub(".+mouse", "", names(beta))
@@ -38,6 +50,7 @@ crossgroupVar <- function(beta, positions, X, wildmice, komice) {
   ## divide by n^2 since it is var of mean for mice groups
   vwild <- apply(betamat[wildmice,], 2, var)/ (length(wildmice)-1)
   vko <- apply(betamat[komice,], 2, var) / (length(komice)-1)
+  ## shortcut instead of creating diagonal vcov matrix
   (x*x)%*%(vko + vwild)
 }
 
