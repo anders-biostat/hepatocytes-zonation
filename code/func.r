@@ -124,3 +124,7 @@ assignPosition <- function(counts, cellanno, totals, fracs, markers) {
   res$condition <- factor(res$condition)
   res
 }
+
+capitalize <- function(x) {
+  paste0(toupper(substring(x, 1, 1)), substring(x, 2))
+}
