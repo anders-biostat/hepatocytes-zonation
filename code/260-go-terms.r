@@ -83,7 +83,7 @@ ABS_LFC_THRES <- 0
   gseares <- map(celltypes, function(celltype) {
     x <- glmtests[[celltype]]
     positions <- unique(x$position)
-    xres <- map(set_names(positions), ~gseForPosition(x, .x))
+    xres <- map(set_names(positions), ~gseaForPosition(x, .x))
     xres
   })
 
@@ -92,3 +92,41 @@ ABS_LFC_THRES <- 0
 }
 
 go <- names(unlist(selectedGO[[celltype]]))
+
+{cat("same for deseq...")
+  deseq <- readRDS(file.path(rdsDir, "pbulks-deseq.rds"))
+  x <- map(deseq, "result")
+  names(x)[1] <- "hep"
+
+  gseaDESeq <- map(x,  function(.x) {
+    .x <- .x %>% arrange(-log2FoldChange)
+    geneList <- .x$log2FoldChange
+    names(geneList) <- capitalize(rownames(.x))
+    gseGO(
+      geneList,
+      OrgDb  = org.Mm.eg.db,
+      keyType = "SYMBOL",
+      ont  = "ALL",
+      pAdjustMethod = "none",
+      pvalueCutoff = 1)
+  })
+
+  saveRDS(gseaDESeq, file.path(rdsDir, "gsea-deseq.rds"))
+
+  gsaDESeq <- map(x,  function(d) {
+    topgenes <- rownames(d)[d$pval < PVAL_THRES & abs(d$log2FoldChange) > ABS_LFC_THRES]
+    topgenes <- capitalize(topgenes)
+    res <- enrichGO(
+      gene = topgenes,
+      universe      = capitalize(rownames(d)),
+      keyType = "SYMBOL",
+      OrgDb         = org.Mm.eg.db,
+      ont           = "ALL",
+      pAdjustMethod = "none",
+      pvalueCutoff = 1,
+      qvalueCutoff = 1)
+  })
+  saveRDS(gsaDESeq, file.path(rdsDir, "gea-deseq.rds"))
+  cat("OK\n")
+
+}
