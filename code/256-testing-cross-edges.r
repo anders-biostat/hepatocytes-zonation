@@ -29,20 +29,14 @@ res <- list(
 
 ## we will compare only two positions, near CV, 0.2, and PV, 0.8.
 positions <- c("0.2" = .2, "0.8" = .8)
-
-x <- res$hep
-splineVars <- grep("X[0-9]", colnames(x$vars[[1]]), value = TRUE)
-mouseCondition <- unique(x$mat[c("mouse", "condition")])
-wildmice <- mouseCondition$mouse[grepl("Wild", mouseCondition$condition)]
-komice <- mouseCondition$mouse[!mouseCondition$mouse %in% wildmice]
-X <- createSplineMat(x$mat$etaq, degree = 4)
+SPLINE_DEGREE <- 4
 
 
-createContrastsEdges <- function(positions, X, mice) {
+createContrastsEdges <- function(positions, X, mice, splineVars) {
   ## take two positions and calculate the difference
   ## it gives us coef only for one mouse
   x <- predict(X, positions)
-  x <- x["0.2", ] - x["0.8", ]
+  x <- x["0.8", ] - x["0.2", ]
   ## now assign it to the specified group
   cntr <- numeric(length(splineVars))
   names(cntr) <- splineVars
@@ -52,22 +46,60 @@ createContrastsEdges <- function(positions, X, mice) {
   }
   as.matrix(cntr, ncol = 1)
 }
-## for understanding, what kind of result should be
-## > . + > createContrastsEdges(positions, X, wildmice)
-## X1:mouse1 X1:mouse2 X1:mouse3 X1:mouse4 X1:mouse5 X1:mouse6 X1:mouse7 X2:mouse1
-## 0.504     0.504     0.504     0.000     0.000     0.000     0.000     0.288
-## X2:mouse2 X2:mouse3 X2:mouse4 X2:mouse5 X2:mouse6 X2:mouse7 X3:mouse1 X3:mouse2
-## 0.288     0.288     0.000     0.000     0.000     0.000    -0.288    -0.288
-## X3:mouse3 X3:mouse4 X3:mouse5 X3:mouse6 X3:mouse7 X4:mouse1 X4:mouse2 X4:mouse3
-## -0.288     0.000     0.000     0.000     0.000    -0.504    -0.504    -0.504
-## X4:mouse4 X4:mouse5 X4:mouse6 X4:mouse7
-## 0.000     0.000     0.000     0.000
 
-cntr <- createContrastsEdges(positions, X, wildmice)
 
 cntrVar <- function(cntr, v) {
+  ## diag only to make it vector(1)
   diag(t(cntr) %*% v %*% (cntr))
 }
 
-v <-  res$hep$vars[[1]]
-cntrVar(cntr, v)
+populationVar <- function(betas, cntr, mice) {
+  betamat <- matrix(betas, ncol = SPLINE_DEGREE, byrow = FALSE)
+  vars <- apply(betamat[mice, ], 2, var)
+  cntrmat <- matrix(cntr, ncol = SPLINE_DEGREE)[mice,]
+  sum(cntrmat^2 %*% vars)
+}
+
+testModel <- function(beta, v, cntr, X, mice) {
+  cntrvar <- cntrVar(cntr, v) + populationVar(beta, cntr, mice)
+  list(l2fc = as.vector(beta %*% cntr / log(2)),
+       sd = sqrt(cntrvar) / log(2),
+       pval = as.numeric(2 * pnorm(-abs(beta %*% cntr), sd = sqrt(cntrvar))))
+}
+
+celltype <- "hep"
+
+testEdges <- function(x) {
+  { # prepare cell type variables
+    splineVars <- grep("X[0-9]", colnames(x$vars[[1]]), value = TRUE)
+    mouseCondition <- unique(x$mat[c("mouse", "condition")])
+    phenotypes <- list(
+      Wildtype = mouseCondition$mouse[grepl("Wild", mouseCondition$condition)],
+      DoubleKO = mouseCondition$mouse[grepl("DoubleKO", mouseCondition$condition)]
+    )
+    phenotypes <- map(phenotypes, as.character)
+    X <- createSplineMat(x$mat$etaq, degree = 4)
+  }
+
+  tests <- list()
+  for (pheno in names(phenotypes)) {
+    cntr <- createContrastsEdges(positions, X, phenotypes[[pheno]], splineVars)
+    tests[[pheno]] <- lapply(set_names(names(x$betas)), function(g) {
+      testModel(
+        x$betas[[g]],
+        x$vars[[g]],
+        cntr,
+        phenotypes[[pheno]]
+      )})
+  }
+
+  tests <- purrr::map(tests, ~ bind_rows(.x, .id = "gene"))
+  tests <- dplyr::bind_rows(tests, .id = "genotype")
+  tests
+}
+
+tests <- list()
+tests[["hep"]] <- testEdges(res[["hep"]])
+tests[["lsec"]] <- testEdges(res[["lsec"]])
+tests <- bind_rows(tests, .id = "genotype")
+
