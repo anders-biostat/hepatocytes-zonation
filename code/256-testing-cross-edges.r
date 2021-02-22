@@ -1,3 +1,20 @@
+## We test edge expression as following:
+##
+## Let beta_1, beta_2, beta_3, beta_4 are coefs for a single mouse.
+## beta * X_0.8 - beta * X_0.2 = beta * (X_0.8 - X_0.2) = C * beta
+## beta = mean(beta_i) mathematically, but we implement beta as a long vector of
+## concatenated per mouse estimations. This results in concatenation of
+## contrasts into matrix C, which we need to divide by number of mice to have
+## mean, not sum, in the end.
+## Test statistics is s = (beta * C)^T (C V C^T)^{-1} (C * beta),
+## C * beta ~ N(0, C^T V C)
+## Variance is also defined as a large matrix for all mice coefs together.
+##
+## We add additional variance due to population variability:
+## var_add = var(beta_1) over mice, which we add to diagonal elements of V.
+##
+##
+
 library(purrr)
 library(ggplot2)
 library(dplyr)
@@ -10,6 +27,7 @@ res <- list(
   hep  = readRDS(file.path(rdsDir, "hepa-glm-mouse-nb-hvg.rds")),
   lsec = readRDS(file.path(rdsDir, "lsec-glm-mouse-nb-hvg.rds")))
 
+## we will compare only two positions, near CV, 0.2, and PV, 0.8.
 positions <- c("0.2" = .2, "0.8" = .8)
 
 x <- res$hep
