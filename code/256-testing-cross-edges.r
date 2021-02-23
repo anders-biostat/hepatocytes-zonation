@@ -60,6 +60,16 @@ populationVar <- function(betas, cntr, mice) {
   sum(cntrmat^2 %*% vars)
 }
 
+(testPopulationVar <- function() {
+  ## test as if we have only two mice
+  ## corrected variance for first two coefs is 0.5
+  betas <- c(1,2,1,2, 0,0,0,0)
+  mice <- 1:2
+  cntr <- rep(1, 8)
+  ## two coefs, two mice, var=0.5 -> in sum is 2
+  stopifnot(populationVar(betas, cntr, mice) == 2)
+})()
+
 testModel <- function(beta, v, cntr, X, mice) {
   cntrvar <- cntrVar(cntr, v) + populationVar(beta, cntr, mice)
   list(l2fc = as.vector(beta %*% cntr / log(2)),
@@ -101,5 +111,16 @@ testEdges <- function(x) {
 tests <- list()
 tests[["hep"]] <- testEdges(res[["hep"]])
 tests[["lsec"]] <- testEdges(res[["lsec"]])
-tests <- bind_rows(tests, .id = "genotype")
+tests <- bind_rows(tests, .id = "celltype")
 
+tests %>% filter(pval < 0.5) %>% arrange(celltype, pval) %>%
+write.csv(
+  file.path(resdir, "edges-test-hep-lsec.csv"), row.names = FALSE)
+
+tests %>%
+  group_by(gene, celltype) %>%
+  filter(abs(diff(range(l2fc))) > 1) %>%
+  filter(min(pval) < 1e-2) %>%
+  arrange(celltype, gene) %>%
+  as.data.frame %>%
+  knitr::kable()
