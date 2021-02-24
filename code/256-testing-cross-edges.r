@@ -120,7 +120,19 @@ write.csv(
 tests %>%
   group_by(gene, celltype) %>%
   filter(abs(diff(range(l2fc))) > 1) %>%
-  filter(min(pval) < 1e-2) %>%
-  arrange(celltype, gene) %>%
+  mutate(minpval = min(pval)) %>%
+  filter(minpval < 1e-2) %>%
+  arrange(celltype, minpval) %>%
+  select(-minpval) %>%
   as.data.frame %>%
   knitr::kable()
+
+## tests %>%
+##   group_by(gene, celltype) %>%
+##   arrange(celltype, gene, genotype) %>%
+##   mutate(diff = diff(l2fc), sumsd = sqrt(sum(sd^2))) %>%
+##   mutate(pvaldiff = 2 * pnorm(-abs(diff), sd=sumsd)) %>%
+##   arrange(celltype, pvaldiff) %>%
+##   filter(pvaldiff < .1) %>%
+##   as.data.frame %>%
+##   knitr::kable(digits=3)
