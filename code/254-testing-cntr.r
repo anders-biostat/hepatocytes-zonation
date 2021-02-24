@@ -47,8 +47,8 @@ crossgroupVar <- function(beta, positions, X, wildmice, komice) {
   colmouse <- gsub(".+mouse", "", names(beta))
   betamat <- matrix(beta, ncol = ncol(x))
   rownames(betamat) <- colmouse[seq_len(nrow(betamat))]
-  vwild <- apply(betamat[wildmice,], 2, var)/ (length(wildmice)-1)
-  vko <- apply(betamat[komice,], 2, var) / (length(komice)-1)
+  vwild <- apply(betamat[wildmice,], 2, var)/ (length(wildmice))
+  vko <- apply(betamat[komice,], 2, var) / (length(komice))
   ## shortcut instead of creating diagonal vcov matrix
   (x*x)%*%(vko + vwild)
 }
