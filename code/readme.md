@@ -48,3 +48,13 @@ calcEta <- function(x, markers) {
 }
 ```
 
+## comparison of conditions
+
+We fit glm with nb for every mouse.
+Then test contrasts as mean(DKO) - mean(WT) and mean(CV-PV)_{genotype}.
+
+## ligand - receptor
+
+We use cellphoneDB to search for expression of interacting pairs:
+we look for the genes, which are zonated in LSEC and 
+which have their pair expressed in HEPs.
