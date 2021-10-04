@@ -3,7 +3,7 @@ library(dplyr)
 library(org.Mm.eg.db)
 library(yaml)
 library(clusterProfiler)
-
+set.seed(1)
 PVAL_THRES <- .01
 ABS_LFC_THRES <- 0
 
