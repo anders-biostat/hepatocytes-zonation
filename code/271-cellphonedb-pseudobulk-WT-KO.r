@@ -48,6 +48,34 @@ annotation <- annotation %>%
   inner_join(mouse2human, by = c("gene_name" = "HGNC.symbol"))
 
 inter <- cptables$interaction_table
+
+id2gene <- function(id) {
+  unique(annotation$MGI.symbol[annotation$id_protein == id])
+}
+
+createMouseGeneLists <- function(inter) {
+  allids <- unique(inter$multidata_1_id, inter$multidata_2_id)
+  ## not all mouse genes were found, we exclude the not found ones here
+  withprotein <- map(allids, id2gene) %>% map_lgl(~ length(.x) > 0)
+  allids <- allids[withprotein]
+
+  x <- map(set_names(allids), function(id) {
+    c(inter$multidata_2_id[inter$multidata_1_id == id],
+      inter$multidata_1_id[inter$multidata_2_id == id])
+  })
+  x <- map(x, unlist)
+  x <- map(x, ~ map(.x, id2gene))
+  x <- map(x, unlist) %>% Filter(function(x) length(x) > 0, x = .)
+
+  ## some human genes are mapped to several mouse genes:
+  ## we copy lists for this genes as well
+  interactingMGI <- map(names(x), id2gene) %>%
+    imap(function(mousegenes, i) {
+      set_names(rep(x[i], length(mousegenes)), mousegenes)
+    }) %>% do.call(what = c)
+  interactingMGI
+}
+
 interactingMGI <- createMouseGeneLists(inter)
 
 annotation <- annotation %>% inner_join(cptables$multidata_table,
