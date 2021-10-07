@@ -1,0 +1,28 @@
+hep: 
+  - "GO:0002082": Regulation of oxidative phosphorylation 
+  - "GO:0045821": Positive regulation of glycolytic process 
+  - "GO:0034405": Response to fluid shear stress
+  - "GO:0070482": Response to oxygen levels
+  - "GO:0001666": Response to hypoxia 
+  - "GO:0034101": RBC homeostasis
+  - "GO:0198738": Cell to cell signaling by Wnt
+  - "GO:0090090": negative regulation of canonical Wnt-activated signaling pathway
+  - "GO:0090263": positive regulation of canonical Wnt-activated signaling pathway
+  - "GO:0006536": Glutamate metabolism
+
+lsec: 
+  - "GO:0002082": Regulation of oxidative phosphorylation 
+  - "GO:0045821": Positive regulation of glycolytic process 
+  - "GO:0034405": Response to fluid shear stress
+  - "GO:0070482": Response to oxygen levels
+  - "GO:0001666": Response to hypoxia 
+  - "GO:0001525": Angiogenesis 
+  - "GO:0001937": Down regulation of endothelial cell proliferation
+  - "GO:0001938": Activation of endothelial cell proliferation
+  - "GO:1901699": cellular response to nitrogen compound
+  - "GO:0005540": Hyaluronan acid binding
+  - "GO:0005044": Scavenger receptor activity
+  - "GO:0042742": Defense response to bacteria
+  - "GO:0198738": Cell to cell signaling by Wnt
+  - "GO:0090090": negative regulation of canonical Wnt-activated signaling pathway
+  - "GO:0090263": positive regulation of canonical Wnt-activated signaling pathway
